@@ -1,7 +1,8 @@
 // main.js — эхлүүлэх цэг. Модулиудыг холбож, апп-ыг ажиллуулна.
 
+import { publishBridge } from './bridge.js';
 import { loadProgram, getDays } from './program.js';
-import { loadState, reconcile } from './storage.js';
+import { loadState, reconcile, subscribe } from './storage.js';
 import { mount, showTab, showError } from './ui.js';
 
 async function start() {
@@ -9,8 +10,18 @@ async function start() {
     loadState();               // хуучин өгөгдлийг унших + migration
     await loadProgram();       // data/program.json
     reconcile(getDays());      // хөтөлбөртэй таарахаа больсон хуучин тэмдэглэгээг цэгцлэх
+
+    // Гадагш чиглэсэн feed: тэмдэглэгээ бичигдэх бүрд gym:bridge шинэчлэгдэнэ.
+    subscribe(publishBridge);
+    publishBridge();
+
     mount();                   // event binding
     showTab('today');
+
+    // Апп-ыг орхиод буцаж ирэхэд шөнө дундыг давсан байж болно — "today" шинэчилнэ.
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) publishBridge();
+    });
   } catch (err) {
     console.error(err);
     showError(
