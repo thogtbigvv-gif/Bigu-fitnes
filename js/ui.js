@@ -16,6 +16,7 @@ import {
 import { getDayForDate } from './program.js';
 
 import {
+  clearAll,
   getDaySets,
   getDayResult,
   getRecentDays,
@@ -64,6 +65,7 @@ const screens = {
 
 let activeTab = 'today';
 const openCards = new Set(); // нээлттэй байгаа дасгалын id-ууд
+let confirmClear = false;    // "бүгдийг устгах" товч баталгаажуулалт хүлээж байна уу
 
 /* ---------------- Тооцоолол ---------------- */
 
@@ -359,6 +361,53 @@ function renderHistory() {
       renderDayRow(date, today, WEEKDAY_SHORT[weekdayIndex(date)])
     ))
   ]));
+
+  root.appendChild(renderDangerZone());
+}
+
+/**
+ * Бүх тэмдэглэгээг устгах хэсэг. Санамсаргүй дарахаас сэргийлж хоёр алхамтай:
+ * эхний дарахад "Итгэлтэй байна уу?" болж хувирна.
+ */
+function renderDangerZone() {
+  const armed = confirmClear;
+
+  return h('section', { class: 'section' }, [
+    h('h2', { class: 'section__title', text: 'Өгөгдөл' }),
+    h('button', {
+      type: 'button',
+      class: `danger${armed ? ' is-armed' : ''}`,
+      dataset: { action: armed ? 'clear-confirm' : 'clear-arm' },
+      text: armed ? 'Итгэлтэй байна уу? Дарж устга' : 'Бүх тэмдэглэгээг устгах'
+    }),
+    armed
+      ? h('button', {
+        type: 'button',
+        class: 'danger-cancel',
+        dataset: { action: 'clear-cancel' },
+        text: 'Болих'
+      })
+      : h('p', {
+        class: 'hint',
+        text: 'Энэ төхөөрөмж дээр хадгалсан бүх өдрийн тэмдэглэгээ устана. Буцаах боломжгүй.'
+      })
+  ]);
+}
+
+function handleHistoryClick(event) {
+  const trigger = event.target.closest('[data-action]');
+  if (!trigger) return;
+
+  const { action } = trigger.dataset;
+
+  if (action === 'clear-arm') confirmClear = true;
+  else if (action === 'clear-cancel') confirmClear = false;
+  else if (action === 'clear-confirm') {
+    clearAll();
+    confirmClear = false;
+  } else return;
+
+  renderHistory();
 }
 
 /* ---------------- Бичих үйлдлүүд ---------------- */
@@ -420,6 +469,7 @@ const RENDERERS = {
 export function showTab(name) {
   if (!RENDERERS[name]) return;
   activeTab = name;
+  confirmClear = false; // таб солиход баталгаажуулалт тайлагдана
 
   for (const [key, get] of Object.entries(screens)) {
     get().hidden = key !== name;
@@ -444,6 +494,7 @@ export function render() {
 /** Event binding — нэг л удаа дуудагдана. */
 export function mount() {
   screens.today().addEventListener('click', handleTodayClick);
+  screens.history().addEventListener('click', handleHistoryClick);
 
   document.getElementById('tabbar').addEventListener('click', (event) => {
     const tab = event.target.closest('[data-tab]');

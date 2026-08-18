@@ -431,3 +431,50 @@
   font-size: var(--f-sm);
   color: #fca5a5;
 }
+
+/* ---------- Аюултай үйлдэл (бүгдийг устгах) ---------- */
+
+.danger {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background-color: var(--c-bg-raised);
+  color: var(--c-danger);
+  font-size: var(--f-sm);
+  font-weight: 600;
+  transition: background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease);
+}
+
+.danger:active {
+  background-color: var(--c-surface);
+}
+
+.danger.is-armed {
+  border-color: var(--c-danger);
+  background-color: var(--c-danger);
+  color: var(--c-danger-ink);
+}
+
+.danger-cancel {
+  width: 100%;
+  min-height: var(--touch);
+  margin-top: var(--s-2);
+  border-radius: var(--r-md);
+  color: var(--c-text-dim);
+  font-size: var(--f-sm);
+  font-weight: 600;
+}
+
+.danger-cancel:active {
+  background-color: var(--c-surface);
+}
+
+.hint {
+  margin-top: var(--s-2);
+  font-size: var(--f-xs);
+  color: var(--c-text-faint);
+}
