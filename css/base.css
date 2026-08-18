@@ -1,66 +1,67 @@
-/* base.css — reset, өнгө/зай/фонтын хувьсагч, typography.
-   Дизайны БҮХ утга энд төвлөрнө. Бусад CSS файл var()-оос л уншина. */
+/* base.css — reset, дизайны бүх хувьсагч, typography.
+   Өнгө, зай, фонтын хэмжээг ЗӨВХӨН энд тодорхойлно. */
 
 :root {
-  /* --- Өнгө: харанхуй сэдэв --- */
-  --c-bg:           #0e1116;
-  --c-bg-raised:    #161b22;
-  --c-bg-sunken:    #0a0d12;
-  --c-surface:      #1b222c;
-  --c-surface-2:    #232b37;
-  --c-border:       #2a3341;
-  --c-border-soft:  #202834;
+  /* --- Дэвсгэрийн 3 давхарга. Давхаргыг зөвхөн өнгөний зэрэглэлээр ялгана,
+         сүүдэр ашиглахгүй (харанхуй дэвсгэр дээр сүүдэр харагддаггүй). --- */
+  --bg-1: #0B0B0C;
+  --bg-2: #141416;
+  --bg-3: #1C1C1F;
 
-  --c-text:         #e8edf4;
-  --c-text-dim:     #9aa7b8;
-  --c-text-faint:   #64717f;
+  /* --- Текст --- */
+  --fg:      #F2F2F3;
+  --fg-2:    #9A9AA0;
+  --fg-3:    #5C5C63;
 
-  --c-accent:       #4ade80;
-  --c-accent-dim:   #1f6b3d;
-  --c-accent-ink:   #06240f;
-  --c-warn:         #fbbf24;
-  --c-rest:         #60a5fa;
-  --c-miss:         #4b5563;
+  /* --- Акцент: өнгөгүй, зөөлөн саарал.
+         Идэвхтэй таб, progress bar, гүйцэтгэсэн тэмдэглэгээ. --- */
+  --accent:     #DEDEE3;
+  --accent-dim: #6E6E76;
+  --accent-ink: #0B0B0C;
 
-  /* --- Зай --- */
-  --s-1: 4px;
-  --s-2: 8px;
-  --s-3: 12px;
-  --s-4: 16px;
-  --s-5: 20px;
-  --s-6: 24px;
-  --s-7: 32px;
-  --s-8: 40px;
+  /* --- Улаан: зөвхөн алдаа ба устгах --- */
+  --danger:     #FF4D4D;
+  --danger-ink: #1A0505;
+
+  /* --- Зааг --- */
+  --line:        rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.16);
+
+  /* --- Зай: зөвхөн 4px-ийн үржвэр --- */
+  --s1: 4px;
+  --s2: 8px;
+  --s3: 12px;
+  --s4: 16px;
+  --s6: 24px;
+  --s8: 32px;
 
   /* --- Фонт --- */
-  --f-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --f-xs:   12px;
-  --f-sm:   14px;
-  --f-md:   16px;
-  --f-lg:   18px;
-  --f-xl:   22px;
-  --f-2xl:  28px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --lh-tight: 1.2;
-  --lh-normal: 1.5;
+  --t-28: 28px;
+  --t-20: 20px;
+  --t-16: 16px;
+  --t-14: 14px;
+  --t-12: 12px;
 
-  /* --- Хэлбэр --- */
-  --r-sm: 8px;
-  --r-md: 12px;
-  --r-lg: 16px;
-  --r-full: 999px;
+  /* --- Хэлбэр: булан 12px-ээс хэтрэхгүй --- */
+  --r1: 8px;
+  --r2: 12px;
 
   /* --- Дарах талбарын доод хэмжээ --- */
   --touch: 44px;
 
-  /* --- Анимаци --- */
-  --t-fast: 150ms;
-  --t-base: 200ms;
-  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+  /* --- Хөдөлгөөн --- */
+  --t-tap:  140ms;  /* дарах хариу */
+  --t-tab:  180ms;  /* таб солих, дэлгэц солих */
+  --t-open: 200ms;  /* сет задрах */
+  --t-bar:  280ms;  /* progress гүйх */
+  --ease: cubic-bezier(0.2, 0, 0, 1);
 
   /* --- Бүтэц --- */
   --nav-h: 60px;
-  --content-max: 480px;
+  --pad-x: 16px;
+  --max-w: 480px;
 }
 
 *,
@@ -71,8 +72,8 @@
 
 html,
 body,
-h1, h2, h3, h4,
-p, ul, ol, li, figure {
+h1, h2, h3,
+p, ul, ol, li {
   margin: 0;
   padding: 0;
 }
@@ -83,16 +84,16 @@ ul, ol {
 
 html {
   -webkit-text-size-adjust: 100%;
-  background-color: var(--c-bg);
+  background-color: var(--bg-1);
 }
 
 body {
   min-height: 100dvh;
-  background-color: var(--c-bg);
-  color: var(--c-text);
-  font-family: var(--f-stack);
-  font-size: var(--f-md);
-  line-height: var(--lh-normal);
+  background-color: var(--bg-1);
+  color: var(--fg);
+  font-family: var(--font);
+  font-size: var(--t-16);
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
@@ -102,6 +103,7 @@ button {
   color: inherit;
   background: none;
   border: none;
+  padding: 0;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
@@ -111,42 +113,41 @@ svg {
   display: block;
 }
 
+/* --- Typography: 28 / 20 / 16 / 14 / 12. Дунд хэмжээ байхгүй. --- */
+
 h1 {
-  font-size: var(--f-2xl);
-  line-height: var(--lh-tight);
+  font-size: var(--t-28);
   font-weight: 700;
+  line-height: 1.15;
   letter-spacing: -0.02em;
 }
 
 h2 {
-  font-size: var(--f-xl);
-  line-height: var(--lh-tight);
-  font-weight: 650;
-  letter-spacing: -0.01em;
+  font-size: var(--t-20);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-h3 {
-  font-size: var(--f-md);
-  line-height: var(--lh-tight);
+/* 12px шошго: том үсэг, задгай зай */
+.label {
+  font-size: var(--t-12);
   font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-2);
+}
+
+/* Бүх тоо нэг өргөнтэй байрлана */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
 }
 
 :focus-visible {
-  outline: 2px solid var(--c-accent);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: var(--r-sm);
-}
-
-.u-dim   { color: var(--c-text-dim); }
-.u-faint { color: var(--c-text-faint); }
-.u-sr {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 @media (prefers-reduced-motion: reduce) {

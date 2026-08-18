@@ -159,6 +159,79 @@ export function saveDay({ date, dayId, sets, done, total }) {
   return getDayResult(date);
 }
 
+/**
+ * Хөтөлбөр солигдоход хуучин тэмдэглэгээг цэгцэлнэ.
+ * main.js дотор program.json ачаалагдсаны дараа нэг удаа дуудагдана.
+ *
+ * - Хөтөлбөрөөс алга болсон өдрийн бичлэгийг устгана.
+ * - Одоо амралт болсон өдрийн бичлэгийг устгана.
+ * - Байхгүй болсон дасгалын сет тэмдэглэгээг хаяна.
+ * - Сетийн тоо өөрчлөгдсөн бол уртыг нь тааруулна.
+ * - done / total / completedAt-ыг дахин тооцно.
+ * - Ганц ч сет тэмдэглэгдээгүй үлдвэл бичлэгийг бүхэлд нь устгана.
+ *
+ * @param {Array} days program.js-ийн getDays() буцаадаг өдрүүд
+ * @returns {{removed: number, trimmed: number}} юу цэвэрлэснийг мэдээлнэ
+ */
+export function reconcile(days) {
+  const state = loadState();
+  const byId = new Map((days || []).map((day) => [day.id, day]));
+
+  let removed = 0;
+  let trimmed = 0;
+
+  for (const [date, session] of Object.entries(state.sessions)) {
+    const day = byId.get(session.dayId);
+
+    // Өдөр нь алга болсон эсвэл амралт болсон -> хадгалах утгагүй.
+    if (!day || day.isRest) {
+      delete state.sessions[date];
+      removed += 1;
+      continue;
+    }
+
+    const sets = {};
+    let done = 0;
+    let anyMark = false;
+
+    for (const exercise of day.exercises) {
+      const previous = session.sets[exercise.id];
+      const marks = Array.from(
+        { length: exercise.sets },
+        (_, i) => Boolean(previous && previous[i])
+      );
+      sets[exercise.id] = marks;
+      if (marks.some(Boolean)) anyMark = true;
+      if (marks.every(Boolean)) done += 1;
+    }
+
+    if (!anyMark) {
+      delete state.sessions[date];
+      removed += 1;
+      continue;
+    }
+
+    const total = day.exercises.length;
+    const isComplete = total > 0 && done >= total;
+    const completedAt = isComplete ? (session.completedAt || localTimestamp()) : null;
+
+    const next = normalizeSession(date, { dayId: day.id, done, total, completedAt, sets });
+    if (JSON.stringify(next) !== JSON.stringify(session)) {
+      state.sessions[date] = next;
+      trimmed += 1;
+    }
+  }
+
+  if (removed || trimmed) persist();
+  return { removed, trimmed };
+}
+
+/** Энэ төхөөрөмж дээрх БҮХ тэмдэглэгээг устгана. Буцаах боломжгүй. */
+export function clearAll() {
+  cache = emptyState();
+  persist();
+}
+
 /** Тухайн өдрийн тэмдэглэгээг бүрэн арилгана. */
 export function clearDay(date) {
   const state = loadState();

@@ -1,433 +1,514 @@
-/* components.css — карт, checkbox, сетийн товч, progress, badge, banner. */
+/* components.css — дасгалын мөр, сетийн тэмдэглэгээ, progress, төлөв, устгах. */
 
-/* ---------- Progress ---------- */
+/* ---------- Progress: шугаман, 4px, бүтэн өргөн ---------- */
 
 .progress {
-  margin-top: var(--s-4);
+  margin-top: var(--s4);
 }
 
 .progress__meta {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: var(--s-3);
-  margin-bottom: var(--s-2);
+  gap: var(--s3);
+  margin-bottom: var(--s2);
 }
 
 .progress__count {
-  font-size: var(--f-sm);
+  font-size: var(--t-14);
   font-weight: 600;
-  color: var(--c-text);
+  color: var(--fg);
 }
 
 .progress__pct {
-  font-size: var(--f-sm);
-  color: var(--c-text-dim);
-  font-variant-numeric: tabular-nums;
+  font-size: var(--t-14);
+  color: var(--fg-2);
 }
 
 .progress__track {
-  height: 8px;
-  border-radius: var(--r-full);
-  background-color: var(--c-surface);
-  overflow: hidden;
+  height: 4px;
+  background-color: var(--bg-3);
 }
 
 .progress__fill {
   height: 100%;
   width: 0;
-  border-radius: var(--r-full);
-  background-color: var(--c-accent);
-  transition: width var(--t-base) var(--ease);
+  background-color: var(--accent);
+  transition: width var(--t-bar) var(--ease);
 }
 
-.progress.is-done .progress__fill {
-  background-color: var(--c-accent);
-}
+/* ---------- Дасгалын мөр ---------- */
 
-/* ---------- Дасгалын карт ---------- */
-
-.card {
-  background-color: var(--c-bg-raised);
-  border: 1px solid var(--c-border-soft);
-  border-radius: var(--r-lg);
+.row-ex {
+  display: flex;
+  align-items: stretch;
+  min-height: 64px;
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
   overflow: hidden;
-  transition: border-color var(--t-fast) var(--ease),
-              background-color var(--t-fast) var(--ease);
 }
 
-.card.is-done {
-  border-color: var(--c-accent-dim);
-  background-color: var(--c-bg-sunken);
-}
-
-.card__head {
+/* Зүүн тал: сетийн тэмдэглэгээ (нэг дараад бүх сетийг тэмдэглэнэ) */
+.mark {
+  flex: 0 0 auto;
+  width: 56px;
   display: flex;
   align-items: center;
-  gap: var(--s-3);
-  width: 100%;
-  min-height: 64px;
-  padding: var(--s-3) var(--s-3) var(--s-3) var(--s-2);
-  text-align: left;
+  justify-content: center;
+  border-right: 1px solid var(--line);
+  transition: background-color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
 }
 
-.card__head:active {
-  background-color: var(--c-surface);
+.mark:active {
+  background-color: var(--bg-3);
+  transform: scale(0.98);
 }
 
-.card__body {
-  flex: 1 1 auto;
-  min-width: 0;
-  text-align: left;
-}
-
-.card__name {
-  font-size: var(--f-md);
-  font-weight: 600;
-  line-height: var(--lh-tight);
-  overflow-wrap: anywhere;
-  transition: color var(--t-fast) var(--ease);
-}
-
-.card.is-done .card__name {
-  color: var(--c-text-dim);
-  text-decoration: line-through;
-  text-decoration-color: var(--c-accent-dim);
-}
-
-.card__meta {
-  margin-top: var(--s-1);
-  font-size: var(--f-sm);
-  color: var(--c-text-dim);
-  font-variant-numeric: tabular-nums;
-}
-
-.card__note {
-  margin-top: var(--s-1);
-  font-size: var(--f-xs);
-  color: var(--c-text-faint);
-}
-
-.card__chevron {
-  flex: 0 0 auto;
-  width: var(--s-6);
-  height: var(--s-6);
-  display: grid;
-  place-items: center;
-  color: var(--c-text-faint);
-  transition: transform var(--t-fast) var(--ease);
-}
-
-.card.is-open .card__chevron {
-  transform: rotate(180deg);
-}
-
-/* ---------- Дугуй checkbox ---------- */
-
-.check {
-  flex: 0 0 auto;
-  width: var(--touch);
-  height: var(--touch);
-  display: grid;
-  place-items: center;
-  border-radius: var(--r-full);
-}
-
-.check:active {
-  background-color: var(--c-surface-2);
-}
-
-.check__box {
+.mark__box {
   width: 26px;
   height: 26px;
-  border-radius: var(--r-full);
-  border: 2px solid var(--c-border);
+  border: 1.5px solid var(--line-strong);
+  border-radius: var(--r1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--t-12);
+  font-weight: 700;
+  color: var(--fg-3);
+  transition: background-color var(--t-tap) var(--ease),
+              border-color var(--t-tap) var(--ease),
+              color var(--t-tap) var(--ease);
+}
+
+.mark__box svg {
+  display: none;
+}
+
+/* Дөнгөж дарсан мөр: тэмдэг татагдаж, хайрцаг бага зэрэг үсэрнэ */
+.row-ex.is-flash .mark__box {
+  animation: box-pop var(--t-tap) var(--ease);
+}
+
+.row-ex.is-flash.is-done .mark__box svg path {
+  stroke-dasharray: 32;
+  animation: check-draw 180ms var(--ease) forwards;
+}
+
+@keyframes box-pop {
+  from { transform: scale(0.86); }
+  to   { transform: scale(1); }
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 32; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* Хэсэгчлэн хийсэн: хийсэн сетийн тоо гарна */
+.row-ex.is-partial .mark__box {
+  border-color: var(--fg-2);
+  color: var(--fg);
+}
+
+/* Гүйцэтгэсэн: акцентаар дүүрнэ (акцент зөвшөөрөгдсөн 3 газрын нэг) */
+.row-ex.is-done .mark__box {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.row-ex.is-done .mark__box svg {
+  display: block;
+}
+
+.row-ex.is-done .mark__box .num {
+  display: none;
+}
+
+/* Баруун тал: нэр ба давталт */
+.row-ex__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s3) var(--s3) var(--s4);
+  text-align: left;
+  transition: background-color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
+}
+
+.row-ex__body:active {
+  background-color: var(--bg-3);
+  transform: scale(0.98);
+}
+
+.row-ex__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+/* Мөр задардаг гэдгийг заана — задрахад эргэнэ */
+.row-ex__chevron {
+  flex: 0 0 auto;
+  color: var(--fg-3);
+  transition: transform var(--t-tap) var(--ease);
+}
+
+.row-ex.is-open .row-ex__chevron {
+  transform: rotate(180deg);
+  color: var(--fg-2);
+}
+
+.row-ex__name {
+  font-size: var(--t-16);
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.row-ex__reps {
+  font-size: var(--t-14);
+  color: var(--fg-2);
+}
+
+.row-ex__note {
+  font-size: var(--t-12);
+  color: var(--fg-3);
+}
+
+/* Гүйцэтгэсэн үед: зураас + тунгалаг. Дэвсгэр өөрчлөгдөхгүй. */
+.row-ex__body {
+  opacity: 1;
+}
+
+.row-ex.is-done .row-ex__body {
+  opacity: 0.45;
+}
+
+.row-ex.is-done .row-ex__name {
+  text-decoration: line-through;
+}
+
+/* ---------- Сетүүд ---------- */
+
+.sets-wrap {
+  display: none;
+}
+
+.row-ex.is-open + .sets-wrap {
   display: grid;
-  place-items: center;
-  color: transparent;
-  transition: background-color var(--t-fast) var(--ease),
-              border-color var(--t-fast) var(--ease),
-              color var(--t-fast) var(--ease);
+  grid-template-rows: 1fr;
+  animation: sets-open var(--t-open) var(--ease);
 }
 
-.card.is-done .check__box {
-  background-color: var(--c-accent);
-  border-color: var(--c-accent);
-  color: var(--c-accent-ink);
+@keyframes sets-open {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to   { grid-template-rows: 1fr; opacity: 1; }
 }
-
-.card.is-partial .check__box {
-  border-color: var(--c-accent);
-}
-
-/* ---------- Сетийн жагсаалт ---------- */
 
 .sets {
-  display: none;
-  padding: 0 var(--s-3) var(--s-4) var(--s-3);
-  border-top: 1px solid var(--c-border-soft);
+  min-height: 0;
+  overflow: hidden;
+  padding: var(--s3) var(--s4) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-top: none;
+  border-radius: 0 0 var(--r2) var(--r2);
 }
 
-.card.is-open .sets {
-  display: block;
-  animation: sets-in var(--t-fast) var(--ease);
-}
-
-@keyframes sets-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
+.row-ex.is-open {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
 }
 
 .sets__label {
-  margin: var(--s-3) 0 var(--s-2);
-  font-size: var(--f-xs);
-  color: var(--c-text-faint);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  margin-bottom: var(--s3);
 }
 
 .sets__row {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--s-2);
+  gap: var(--s2);
 }
 
-.set-btn {
+.set {
   min-width: var(--touch);
   height: var(--touch);
-  padding: 0 var(--s-3);
-  border-radius: var(--r-md);
-  border: 1px solid var(--c-border);
-  background-color: var(--c-surface);
-  color: var(--c-text-dim);
-  font-size: var(--f-sm);
+  padding: 0 var(--s3);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r1);
+  background-color: var(--bg-1);
+  color: var(--fg-2);
+  font-size: var(--t-14);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  transition: background-color var(--t-fast) var(--ease),
-              border-color var(--t-fast) var(--ease),
-              color var(--t-fast) var(--ease),
-              transform var(--t-fast) var(--ease);
+  transition: background-color var(--t-tap) var(--ease),
+              border-color var(--t-tap) var(--ease),
+              color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
 }
 
-.set-btn:active {
-  transform: scale(0.94);
+.set:active {
+  transform: scale(0.98);
+  background-color: var(--bg-3);
 }
 
-.set-btn.is-on {
-  background-color: var(--c-accent);
-  border-color: var(--c-accent);
-  color: var(--c-accent-ink);
+.set.is-on {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
 }
 
-/* ---------- Banner / төлөв ---------- */
-
-.banner {
-  display: flex;
-  align-items: center;
-  gap: var(--s-3);
-  padding: var(--s-4);
-  border-radius: var(--r-lg);
-  border: 1px solid var(--c-accent-dim);
-  background-color: rgba(74, 222, 128, 0.08);
-  animation: banner-in var(--t-base) var(--ease);
+.set.is-flash {
+  animation: box-pop var(--t-tap) var(--ease);
 }
 
-@keyframes banner-in {
-  from { opacity: 0; transform: scale(0.98); }
+/* ---------- Дууссан төлөв ---------- */
+
+.done-block {
+  animation: block-in var(--t-open) var(--ease);
+  padding: var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--fg);
+  border-radius: var(--r1);
+}
+
+@keyframes block-in {
+  from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: none; }
 }
 
-.banner__icon {
-  flex: 0 0 auto;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--r-full);
-  display: grid;
-  place-items: center;
-  background-color: var(--c-accent);
-  color: var(--c-accent-ink);
+.done-block__title {
+  font-size: var(--t-16);
+  font-weight: 600;
 }
 
-.banner__title {
-  font-size: var(--f-md);
-  font-weight: 650;
-  color: var(--c-accent);
+.done-block__text {
+  margin-top: var(--s1);
+  font-size: var(--t-14);
+  color: var(--fg-2);
 }
 
-.banner__text {
-  font-size: var(--f-sm);
-  color: var(--c-text-dim);
+/* ---------- Амралтын өдөр ---------- */
+
+.rest {
+  padding: var(--s8) 0;
+  border-top: 1px solid var(--line);
 }
 
-/* ---------- Амралтын өдөр / хоосон төлөв ---------- */
-
-.pad {
-  padding: var(--s-8) var(--s-4);
-  text-align: center;
-  border-radius: var(--r-lg);
-  border: 1px dashed var(--c-border);
-  background-color: var(--c-bg-raised);
+.rest__title {
+  font-size: var(--t-20);
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
-.pad__icon {
-  width: 56px;
-  height: 56px;
-  margin: 0 auto var(--s-4);
-  border-radius: var(--r-full);
-  display: grid;
-  place-items: center;
-  background-color: var(--c-surface);
-  color: var(--c-rest);
+.rest__text {
+  margin-top: var(--s3);
+  font-size: var(--t-14);
+  color: var(--fg-2);
+  max-width: 30ch;
 }
 
-.pad__title {
-  font-size: var(--f-lg);
-  font-weight: 650;
+.rest__next {
+  margin-top: var(--s6);
+  padding-top: var(--s4);
+  border-top: 1px solid var(--line);
 }
 
-.pad__text {
-  margin-top: var(--s-2);
-  font-size: var(--f-sm);
-  color: var(--c-text-dim);
+.rest__next-label {
+  margin-bottom: var(--s1);
 }
 
-/* ---------- Мөрийн жагсаалт (долоо хоног / түүх) ---------- */
+.rest__next-day {
+  font-size: var(--t-16);
+  font-weight: 600;
+}
 
-.row {
+/* ---------- Өдрийн мөр (долоо хоног / түүх) ---------- */
+
+.row-day {
   display: flex;
   align-items: center;
-  gap: var(--s-3);
+  gap: var(--s3);
   min-height: var(--touch);
-  padding: var(--s-3);
-  border-radius: var(--r-md);
-  background-color: var(--c-bg-raised);
-  border: 1px solid var(--c-border-soft);
+  padding: var(--s3) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
 }
 
-.row.is-today {
-  border-color: var(--c-accent-dim);
-  background-color: var(--c-surface);
+.row-day.is-today {
+  border-color: var(--line-strong);
+  background-color: var(--bg-3);
 }
 
-.row__mark {
+.row-day.is-idle {
+  opacity: 0.55;
+}
+
+.row-day__wd {
   flex: 0 0 auto;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--r-full);
-  display: grid;
-  place-items: center;
-  background-color: var(--c-surface-2);
-  color: var(--c-text-faint);
+  width: 24px;
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
 }
 
-.row__mark.is-done {
-  background-color: var(--c-accent);
-  color: var(--c-accent-ink);
+/* Төлөвийн тэмдэг: жижиг дөрвөлжин, зөвхөн саарлын зэрэглэл */
+.row-day__dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1.5px solid var(--fg-3);
 }
 
-.row__mark.is-partial {
-  background-color: var(--c-warn);
-  color: var(--c-accent-ink);
+.row-day__dot.is-full {
+  background-color: var(--fg);
+  border-color: var(--fg);
 }
 
-.row__mark.is-rest {
-  background-color: var(--c-surface-2);
-  color: var(--c-rest);
+.row-day__dot.is-half {
+  position: relative;
+  border-color: var(--fg-2);
+  overflow: hidden;
 }
 
-.row__body {
+.row-day__dot.is-half::before {
+  content: "";
+  position: absolute;
+  inset: 0 50% 0 0;
+  background-color: var(--fg-2);
+}
+
+.row-day__dot.is-rest {
+  border: none;
+  height: 1.5px;
+  background-color: var(--fg-3);
+}
+
+.row-day__body {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-.row__title {
-  font-size: var(--f-sm);
+.row-day__title {
+  font-size: var(--t-14);
   font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
-.row__meta {
-  font-size: var(--f-xs);
-  color: var(--c-text-faint);
-  font-variant-numeric: tabular-nums;
+.row-day__meta {
+  font-size: var(--t-12);
+  color: var(--fg-3);
 }
 
-.row__day {
+.row-day__state {
   flex: 0 0 auto;
-  width: 34px;
-  text-align: center;
-  font-size: var(--f-xs);
+  font-size: var(--t-12);
   font-weight: 600;
-  color: var(--c-text-faint);
-  font-variant-numeric: tabular-nums;
-}
-
-/* ---------- Badge ---------- */
-
-.badge {
-  flex: 0 0 auto;
-  padding: 3px var(--s-2);
-  border-radius: var(--r-full);
-  font-size: var(--f-xs);
-  font-weight: 600;
-  background-color: var(--c-surface-2);
-  color: var(--c-text-dim);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
   white-space: nowrap;
 }
 
-.badge.is-done {
-  background-color: var(--c-accent-dim);
-  color: var(--c-accent);
-}
-
-.badge.is-partial {
-  background-color: rgba(251, 191, 36, 0.15);
-  color: var(--c-warn);
-}
-
-.badge.is-rest {
-  background-color: rgba(96, 165, 250, 0.15);
-  color: var(--c-rest);
+.row-day__state.is-done {
+  color: var(--fg);
 }
 
 /* ---------- Тоон хураангуй ---------- */
 
 .stats {
   display: flex;
-  gap: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  overflow: hidden;
 }
 
 .stat {
   flex: 1 1 0;
-  padding: var(--s-3);
-  border-radius: var(--r-md);
-  background-color: var(--c-bg-raised);
-  border: 1px solid var(--c-border-soft);
+  padding: var(--s4) var(--s2);
+  background-color: var(--bg-2);
   text-align: center;
 }
 
+.stat + .stat {
+  border-left: 1px solid var(--line);
+}
+
 .stat__value {
-  font-size: var(--f-xl);
+  font-size: var(--t-20);
   font-weight: 700;
-  line-height: var(--lh-tight);
-  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
 }
 
 .stat__label {
-  margin-top: var(--s-1);
-  font-size: var(--f-xs);
-  color: var(--c-text-faint);
+  margin-top: var(--s1);
+  font-size: var(--t-12);
+  color: var(--fg-3);
+}
+
+/* ---------- Устгах ---------- */
+
+.danger {
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  color: var(--danger);
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+
+.danger:active {
+  background-color: var(--bg-3);
+}
+
+.danger.is-armed {
+  background-color: var(--danger);
+  border-color: var(--danger);
+  color: var(--danger-ink);
+}
+
+.danger-cancel {
+  width: 100%;
+  min-height: var(--touch);
+  margin-top: var(--s2);
+  color: var(--fg-2);
+  font-size: var(--t-14);
+  font-weight: 600;
+}
+
+.danger-cancel:active {
+  background-color: var(--bg-2);
+}
+
+.hint {
+  margin-top: var(--s2);
+  font-size: var(--t-12);
+  color: var(--fg-3);
 }
 
 /* ---------- Алдаа ---------- */
 
 .error {
-  padding: var(--s-4);
-  border-radius: var(--r-md);
-  border: 1px solid #7f1d1d;
-  background-color: rgba(127, 29, 29, 0.15);
-  font-size: var(--f-sm);
-  color: #fca5a5;
+  padding: var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--danger);
+  border-radius: var(--r1);
+  font-size: var(--t-14);
+  color: var(--fg-2);
 }
