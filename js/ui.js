@@ -3,6 +3,7 @@
 
 import {
   HISTORY_DAYS,
+  WEEKDAY_NAMES,
   WEEKDAY_SHORT,
   formatDate,
   formatDateLong,
@@ -26,14 +27,7 @@ import {
 
 /* ---------------- DOM туслахууд ---------------- */
 
-const ICONS = {
-  check: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>',
-  chevron: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
-  moonSm: '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
-  moon: '<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',
-  dot: '<svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>',
-  dash: '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 12h12"/></svg>'
-};
+const CHECK = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg>';
 
 function h(tag, props = {}, children = []) {
   const node = document.createElement(tag);
@@ -105,6 +99,16 @@ function dayStatus(date) {
   return { key: 'none', done: 0, total, day };
 }
 
+/** Өнөөдрөөс хойших хамгийн ойрын бэлтгэлийн өдөр. */
+function nextTrainingDay(fromDate) {
+  for (let i = 1; i <= 7; i += 1) {
+    const date = shiftDate(fromDate, i);
+    const day = getDayForDate(date);
+    if (day && !day.isRest) return { date, day };
+  }
+  return null;
+}
+
 /* ---------------- Өнөөдөр дэлгэц ---------------- */
 
 function renderProgress(done, total) {
@@ -112,13 +116,13 @@ function renderProgress(done, total) {
   const fill = h('div', { class: 'progress__fill' });
   fill.style.width = `${pct}%`;
 
-  return h('div', { class: `progress${done >= total && total > 0 ? ' is-done' : ''}` }, [
+  return h('div', { class: 'progress' }, [
     h('div', { class: 'progress__meta' }, [
-      h('span', { class: 'progress__count', text: `${done} / ${total} дасгал` }),
-      h('span', { class: 'progress__pct', text: `${pct}%` })
+      h('span', { class: 'progress__count num', text: `${done}/${total} дасгал` }),
+      h('span', { class: 'progress__pct num', text: `${pct}%` })
     ]),
     h('div', {
-      class: 'progress__track',
+      class: 'progress__track bleed',
       role: 'progressbar',
       'aria-valuemin': '0',
       'aria-valuemax': String(total),
@@ -128,24 +132,29 @@ function renderProgress(done, total) {
   ]);
 }
 
-function renderExerciseCard(exercise, marks) {
+function renderExerciseRow(exercise, marks) {
   const done = isExerciseDone(marks);
   const doneSets = marks.filter(Boolean).length;
   const partial = !done && doneSets > 0;
   const open = openCards.has(exercise.id);
 
-  const metaParts = [`${exercise.sets} сет × ${exercise.reps}`];
-  if (exercise.rest) metaParts.push(`амралт ${formatRest(exercise.rest)}`);
+  const meta = [`${exercise.sets} × ${exercise.reps}`];
+  if (exercise.rest) meta.push(`амралт ${formatRest(exercise.rest)}`);
 
-  const classes = ['card'];
+  const classes = ['row-ex'];
   if (done) classes.push('is-done');
   if (partial) classes.push('is-partial');
   if (open) classes.push('is-open');
 
+  const box = h('span', { class: 'mark__box' }, [
+    h('span', { class: 'num', text: partial ? String(doneSets) : '' }),
+    h('span', { icon: CHECK, 'aria-hidden': 'true' })
+  ]);
+
   const setButtons = marks.map((on, index) =>
     h('button', {
       type: 'button',
-      class: `set-btn${on ? ' is-on' : ''}`,
+      class: `set num${on ? ' is-on' : ''}`,
       'aria-pressed': on ? 'true' : 'false',
       'aria-label': `${index + 1}-р сет`,
       dataset: { action: 'set', exercise: exercise.id, index: String(index) },
@@ -153,47 +162,58 @@ function renderExerciseCard(exercise, marks) {
     })
   );
 
-  return h('li', { class: classes.join(' '), dataset: { exercise: exercise.id } }, [
-    h('div', { class: 'card__head' }, [
+  return h('li', {}, [
+    h('div', { class: classes.join(' ') }, [
       h('button', {
         type: 'button',
-        class: 'check',
+        class: 'mark',
         'aria-pressed': done ? 'true' : 'false',
         'aria-label': `${exercise.name} — дууссан гэж тэмдэглэх`,
         dataset: { action: 'toggle', exercise: exercise.id }
-      }, [h('span', { class: 'check__box', icon: ICONS.check })]),
+      }, [box]),
 
       h('button', {
         type: 'button',
-        class: 'card__body',
+        class: 'row-ex__body',
         'aria-expanded': open ? 'true' : 'false',
         dataset: { action: 'open', exercise: exercise.id }
       }, [
-        h('div', { class: 'card__name', text: exercise.name }),
-        h('div', { class: 'card__meta', text: metaParts.join(' · ') }),
-        exercise.note ? h('div', { class: 'card__note', text: exercise.note }) : null
-      ]),
-
-      h('span', { class: 'card__chevron', icon: ICONS.chevron, 'aria-hidden': 'true' })
+        h('span', { class: 'row-ex__name', text: exercise.name }),
+        h('span', { class: 'row-ex__reps num', text: meta.join(' · ') }),
+        exercise.note ? h('span', { class: 'row-ex__note', text: exercise.note }) : null
+      ])
     ]),
 
     h('div', { class: 'sets' }, [
-      h('div', { class: 'sets__label', text: `Сетүүд — ${doneSets}/${marks.length} хийсэн` }),
+      h('div', { class: 'sets__label label num', text: `Сет — ${doneSets}/${marks.length}` }),
       h('div', { class: 'sets__row' }, setButtons)
     ])
   ]);
 }
 
 function renderRestDay(date, day) {
+  const next = nextTrainingDay(date);
+
   return [
     h('header', { class: 'head' }, [
-      h('div', { class: 'head__date', text: formatDateLong(date) }),
+      h('div', { class: 'head__date num', text: formatDateLong(date) }),
       h('h1', { class: 'head__title', text: day.title })
     ]),
-    h('div', { class: 'pad' }, [
-      h('div', { class: 'pad__icon', icon: ICONS.moon }),
-      h('div', { class: 'pad__title', text: 'Өнөөдөр амралтын өдөр' }),
-      h('p', { class: 'pad__text', text: 'Сэргэх нь бас бэлтгэлийн нэг хэсэг. Маргааш уулзацгаая.' })
+    h('section', { class: 'rest' }, [
+      h('div', { class: 'rest__title', text: 'Өнөөдөр ачаалал алга' }),
+      h('p', {
+        class: 'rest__text',
+        text: 'Булчин заал дээр биш, амрах үедээ ургадаг. Хоол, ус, нойроо гүйцээ.'
+      }),
+      next
+        ? h('div', { class: 'rest__next' }, [
+          h('div', { class: 'rest__next-label label', text: 'Дараагийн бэлтгэл' }),
+          h('div', {
+            class: 'rest__next-day',
+            text: `${WEEKDAY_NAMES[weekdayIndex(next.date)]} — ${next.day.title}`
+          })
+        ])
+        : null
     ])
   ];
 }
@@ -221,38 +241,35 @@ function renderToday() {
   const isComplete = total > 0 && done >= total;
 
   root.appendChild(h('header', { class: 'head' }, [
-    h('div', { class: 'head__date', text: formatDateLong(date) }),
+    h('div', { class: 'head__date num', text: formatDateLong(date) }),
     h('h1', { class: 'head__title', text: day.title }),
     renderProgress(done, total)
   ]));
 
   if (isComplete) {
     const result = getDayResult(date);
-    root.appendChild(h('div', { class: 'banner' }, [
-      h('div', { class: 'banner__icon', icon: ICONS.check }),
-      h('div', {}, [
-        h('div', { class: 'banner__title', text: 'Өнөөдрийн бэлтгэл дууслаа' }),
-        h('div', {
-          class: 'banner__text',
-          text: result && result.completedAt
-            ? `Дуусгасан: ${result.completedAt.slice(11)}`
-            : 'Бүх дасгал тэмдэглэгдсэн.'
-        })
-      ])
+    root.appendChild(h('div', { class: 'done-block' }, [
+      h('div', { class: 'done-block__title', text: 'Бэлтгэл дууслаа' }),
+      h('div', {
+        class: 'done-block__text num',
+        text: result && result.completedAt
+          ? `Дуусгасан ${result.completedAt.slice(11)} · ${total}/${total} дасгал`
+          : `${total}/${total} дасгал тэмдэглэгдсэн`
+      })
     ]));
   }
 
   root.appendChild(h('section', { class: 'section' }, [
-    h('h2', { class: 'section__title', text: 'Дасгалууд' }),
-    h('ul', { class: 'stack' }, day.exercises.map((exercise) =>
-      renderExerciseCard(exercise, sets[exercise.id])
+    h('h2', { class: 'section__title label', text: 'Дасгалууд' }),
+    h('ul', { class: 'list' }, day.exercises.map((exercise) =>
+      renderExerciseRow(exercise, sets[exercise.id])
     ))
   ]));
 }
 
 /* ---------------- Долоо хоног дэлгэц ---------------- */
 
-const STATUS_LABEL = {
+const STATE_LABEL = {
   done: 'Биелсэн',
   partial: 'Дутуу',
   rest: 'Амралт',
@@ -260,37 +277,36 @@ const STATUS_LABEL = {
   upcoming: 'Удахгүй'
 };
 
-function statusMark(key) {
-  if (key === 'done') return h('div', { class: 'row__mark is-done', icon: ICONS.check });
-  if (key === 'partial') return h('div', { class: 'row__mark is-partial', icon: ICONS.dot });
-  if (key === 'rest') return h('div', { class: 'row__mark is-rest', icon: ICONS.moonSm });
-  return h('div', { class: 'row__mark', icon: ICONS.dash });
-}
+const DOT_CLASS = {
+  done: 'is-full',
+  partial: 'is-half',
+  rest: 'is-rest'
+};
 
 function renderDayRow(date, today, label) {
   const status = dayStatus(date);
   const isFuture = date > today;
   const key = isFuture && status.key === 'none' ? 'upcoming' : status.key;
 
-  const metaParts = [];
-  if (status.key === 'rest') metaParts.push('Дасгал байхгүй');
-  else metaParts.push(`${status.done}/${status.total} дасгал`);
-
-  const classes = ['row'];
+  const classes = ['row-day'];
   if (date === today) classes.push('is-today');
+  if (key === 'none' || key === 'upcoming') classes.push('is-idle');
 
-  const badgeClass = key === 'done' ? ' is-done'
-    : key === 'partial' ? ' is-partial'
-      : key === 'rest' ? ' is-rest' : '';
+  const meta = status.key === 'rest'
+    ? 'Дасгал байхгүй'
+    : `${status.done}/${status.total} дасгал`;
 
   return h('li', { class: classes.join(' ') }, [
-    label ? h('div', { class: 'row__day', text: label }) : null,
-    statusMark(key),
-    h('div', { class: 'row__body' }, [
-      h('div', { class: 'row__title', text: status.day ? status.day.title : '—' }),
-      h('div', { class: 'row__meta', text: `${formatDate(date)} · ${metaParts.join('')}` })
+    label ? h('div', { class: 'row-day__wd', text: label }) : null,
+    h('div', { class: `row-day__dot ${DOT_CLASS[key] || ''}`.trim() }),
+    h('div', { class: 'row-day__body' }, [
+      h('div', { class: 'row-day__title', text: status.day ? status.day.title : '—' }),
+      h('div', { class: 'row-day__meta num', text: `${formatDate(date)} · ${meta}` })
     ]),
-    h('span', { class: `badge${badgeClass}`, text: STATUS_LABEL[key] })
+    h('span', {
+      class: `row-day__state${key === 'done' ? ' is-done' : ''}`,
+      text: STATE_LABEL[key]
+    })
   ]);
 }
 
@@ -306,12 +322,12 @@ function renderWeek() {
   const planned = week.filter(({ date }) => !dayStatus(date).day?.isRest).length;
 
   root.appendChild(h('header', { class: 'head' }, [
-    h('div', { class: 'head__date', text: `${formatDate(monday)} — ${formatDate(shiftDate(monday, 6))}` }),
+    h('div', { class: 'head__date num', text: `${formatDate(monday)} — ${formatDate(shiftDate(monday, 6))}` }),
     h('h1', { class: 'head__title', text: 'Долоо хоног' }),
-    h('div', { class: 'head__sub', text: `${planned} бэлтгэлийн өдрөөс ${trained} нь биелсэн` })
+    h('div', { class: 'head__sub num', text: `${planned} бэлтгэлийн өдрөөс ${trained} нь биелсэн` })
   ]));
 
-  root.appendChild(h('ul', { class: 'stack-sm' }, week.map(({ date }, index) =>
+  root.appendChild(h('ul', { class: 'list-tight' }, week.map(({ date }, index) =>
     renderDayRow(date, today, WEEKDAY_SHORT[index])
   )));
 }
@@ -336,28 +352,28 @@ function renderHistory() {
   }
 
   root.appendChild(h('header', { class: 'head' }, [
-    h('div', { class: 'head__date', text: `Сүүлийн ${HISTORY_DAYS} өдөр` }),
+    h('div', { class: 'head__date num', text: `Сүүлийн ${HISTORY_DAYS} өдөр` }),
     h('h1', { class: 'head__title', text: 'Түүх' })
   ]));
 
   root.appendChild(h('div', { class: 'stats' }, [
     h('div', { class: 'stat' }, [
-      h('div', { class: 'stat__value', text: String(done) }),
+      h('div', { class: 'stat__value num', text: String(done) }),
       h('div', { class: 'stat__label', text: 'Биелсэн' })
     ]),
     h('div', { class: 'stat' }, [
-      h('div', { class: 'stat__value', text: String(missed) }),
+      h('div', { class: 'stat__value num', text: String(missed) }),
       h('div', { class: 'stat__label', text: 'Хийгээгүй' })
     ]),
     h('div', { class: 'stat' }, [
-      h('div', { class: 'stat__value', text: String(rest) }),
+      h('div', { class: 'stat__value num', text: String(rest) }),
       h('div', { class: 'stat__label', text: 'Амралт' })
     ])
   ]));
 
   root.appendChild(h('section', { class: 'section' }, [
-    h('h2', { class: 'section__title', text: 'Өдрүүд' }),
-    h('ul', { class: 'stack-sm' }, days.map(({ date }) =>
+    h('h2', { class: 'section__title label', text: 'Өдрүүд' }),
+    h('ul', { class: 'list-tight' }, days.map(({ date }) =>
       renderDayRow(date, today, WEEKDAY_SHORT[weekdayIndex(date)])
     ))
   ]));
@@ -373,7 +389,7 @@ function renderDangerZone() {
   const armed = confirmClear;
 
   return h('section', { class: 'section' }, [
-    h('h2', { class: 'section__title', text: 'Өгөгдөл' }),
+    h('h2', { class: 'section__title label', text: 'Өгөгдөл' }),
     h('button', {
       type: 'button',
       class: `danger${armed ? ' is-armed' : ''}`,
@@ -448,7 +464,7 @@ function handleTodayClick(event) {
   } else if (action === 'set') {
     const i = Number(index);
     marks[i] = !marks[i];
-    // Сет дээр дархад карт нээлттэй хэвээр байх нь зүйтэй
+    // Сет дээр дархад мөр нээлттэй хэвээр байх нь зүйтэй
     openCards.add(exerciseId);
   } else {
     return;
