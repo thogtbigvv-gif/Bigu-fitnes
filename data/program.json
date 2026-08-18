@@ -1,72 +1,72 @@
 {
   "version": 1,
-  "name": "Push/Pull/Legs",
+  "name": "Өргөн мөр, бүтэн нуруу",
+  "restDays": ["d3", "d7"],
   "days": [
     {
       "id": "d1",
-      "title": "Мөр ба цээж",
+      "title": "Нуруу + Бицепс",
       "exercises": [
-        { "id": "e1", "name": "Overhead press", "sets": 4, "reps": "8-10", "rest": 90, "note": "Нуруугаа хөшөөлгүй, хэвлийгээ чангал" },
-        { "id": "e2", "name": "Incline dumbbell press", "sets": 4, "reps": "10-12", "rest": 90, "note": "" },
-        { "id": "e3", "name": "Lateral raise", "sets": 3, "reps": "12-15", "rest": 60, "note": "Хөнгөн жин, хяналттай" },
-        { "id": "e4", "name": "Cable fly", "sets": 3, "reps": "12-15", "rest": 60, "note": "" },
-        { "id": "e5", "name": "Triceps pushdown", "sets": 3, "reps": "12-15", "rest": 60, "note": "" }
+        { "id": "e101", "name": "Өргөн бариултай таталга / Lat pulldown", "sets": 4, "reps": "8-10", "rest": 150, "note": "" },
+        { "id": "e102", "name": "Bent-over barbell row", "sets": 4, "reps": "8-10", "rest": 150, "note": "Нуруугаа бөхийлгөхгүй" },
+        { "id": "e103", "name": "Seated cable row", "sets": 3, "reps": "10-12", "rest": 90, "note": "" },
+        { "id": "e104", "name": "Straight-arm pulldown", "sets": 3, "reps": "12-15", "rest": 75, "note": "" },
+        { "id": "e105", "name": "Face pull", "sets": 3, "reps": "15", "rest": 75, "note": "" },
+        { "id": "e106", "name": "Barbell curl", "sets": 3, "reps": "10-12", "rest": 75, "note": "" },
+        { "id": "e107", "name": "Hammer curl", "sets": 3, "reps": "12", "rest": 75, "note": "" }
       ]
     },
     {
       "id": "d2",
-      "title": "Нуруу ба гар",
+      "title": "Мөр + Трицепс",
       "exercises": [
-        { "id": "e1", "name": "Pull-up", "sets": 4, "reps": "6-10", "rest": 120, "note": "Чадахгүй бол resistance band ашигла" },
-        { "id": "e2", "name": "Barbell row", "sets": 4, "reps": "8-10", "rest": 90, "note": "" },
-        { "id": "e3", "name": "Lat pulldown", "sets": 3, "reps": "10-12", "rest": 75, "note": "" },
-        { "id": "e4", "name": "Face pull", "sets": 3, "reps": "15-20", "rest": 60, "note": "Мөрний эрүүл мэндэд" },
-        { "id": "e5", "name": "Barbell curl", "sets": 3, "reps": "10-12", "rest": 60, "note": "" }
+        { "id": "e201", "name": "Overhead press", "sets": 4, "reps": "6-10", "rest": 150, "note": "Штанг эсвэл гантель" },
+        { "id": "e202", "name": "Lateral raise", "sets": 4, "reps": "12-15", "rest": 75, "note": "Мөр өргөсгөх ГОЛ дасгал. Хүнд жингээс илүү цэвэр хөдөлгөөн." },
+        { "id": "e203", "name": "Cable lateral raise", "sets": 3, "reps": "15", "rest": 75, "note": "Нэг гараар" },
+        { "id": "e204", "name": "Rear delt fly", "sets": 3, "reps": "15", "rest": 75, "note": "" },
+        { "id": "e205", "name": "Shrug", "sets": 3, "reps": "12", "rest": 75, "note": "" },
+        { "id": "e206", "name": "Rope pushdown", "sets": 3, "reps": "12", "rest": 75, "note": "" },
+        { "id": "e207", "name": "Overhead triceps extension", "sets": 3, "reps": "12", "rest": 75, "note": "" }
       ]
     },
-    {
-      "id": "d3",
-      "title": "Хөл",
-      "exercises": [
-        { "id": "e1", "name": "Back squat", "sets": 4, "reps": "6-8", "rest": 150, "note": "Дулаалгаа сайн хий" },
-        { "id": "e2", "name": "Romanian deadlift", "sets": 4, "reps": "8-10", "rest": 120, "note": "" },
-        { "id": "e3", "name": "Leg press", "sets": 3, "reps": "12-15", "rest": 90, "note": "" },
-        { "id": "e4", "name": "Leg curl", "sets": 3, "reps": "12-15", "rest": 60, "note": "" },
-        { "id": "e5", "name": "Standing calf raise", "sets": 4, "reps": "15-20", "rest": 45, "note": "" }
-      ]
-    },
+    { "id": "d3", "title": "Амралт", "exercises": [] },
     {
       "id": "d4",
-      "title": "Амралт",
-      "exercises": []
+      "title": "Хөл + Хэвлий",
+      "exercises": [
+        { "id": "e401", "name": "Squat", "sets": 4, "reps": "8", "rest": 180, "note": "Нуруу бөхийвөл жингээ бууруул" },
+        { "id": "e402", "name": "Romanian deadlift", "sets": 3, "reps": "10", "rest": 150, "note": "" },
+        { "id": "e403", "name": "Leg press", "sets": 3, "reps": "12", "rest": 120, "note": "" },
+        { "id": "e404", "name": "Leg curl", "sets": 3, "reps": "12", "rest": 90, "note": "" },
+        { "id": "e405", "name": "Calf raise", "sets": 4, "reps": "15", "rest": 60, "note": "" },
+        { "id": "e406", "name": "Hanging leg raise", "sets": 3, "reps": "12", "rest": 60, "note": "" },
+        { "id": "e407", "name": "Plank", "sets": 3, "reps": "45 сек", "rest": 60, "note": "" }
+      ]
     },
     {
       "id": "d5",
-      "title": "Цээж ба мөр",
+      "title": "Нуруу (зузаан) + Дельта",
       "exercises": [
-        { "id": "e1", "name": "Bench press", "sets": 4, "reps": "6-8", "rest": 150, "note": "" },
-        { "id": "e2", "name": "Seated dumbbell press", "sets": 4, "reps": "8-10", "rest": 90, "note": "" },
-        { "id": "e3", "name": "Dips", "sets": 3, "reps": "8-12", "rest": 90, "note": "Цээж рүү бага зэрэг тонгойно" },
-        { "id": "e4", "name": "Rear delt fly", "sets": 3, "reps": "15-20", "rest": 60, "note": "" },
-        { "id": "e5", "name": "Overhead triceps extension", "sets": 3, "reps": "10-12", "rest": 60, "note": "" }
+        { "id": "e501", "name": "Deadlift", "sets": 4, "reps": "5", "rest": 180, "note": "Эсвэл T-bar row" },
+        { "id": "e502", "name": "Wide-grip pulldown", "sets": 4, "reps": "10", "rest": 120, "note": "" },
+        { "id": "e503", "name": "One-arm dumbbell row", "sets": 3, "reps": "10", "rest": 90, "note": "" },
+        { "id": "e504", "name": "Lateral raise", "sets": 4, "reps": "15", "rest": 75, "note": "" },
+        { "id": "e505", "name": "Face pull", "sets": 3, "reps": "15", "rest": 75, "note": "" },
+        { "id": "e506", "name": "Back extension", "sets": 3, "reps": "12", "rest": 75, "note": "" }
       ]
     },
     {
       "id": "d6",
-      "title": "Нуруу ба хэвлий",
+      "title": "Цээж + Гар",
       "exercises": [
-        { "id": "e1", "name": "Deadlift", "sets": 3, "reps": "5", "rest": 180, "note": "Техникээ эхэлж шалга" },
-        { "id": "e2", "name": "Seated cable row", "sets": 4, "reps": "10-12", "rest": 90, "note": "" },
-        { "id": "e3", "name": "Dumbbell shrug", "sets": 3, "reps": "12-15", "rest": 60, "note": "" },
-        { "id": "e4", "name": "Hanging leg raise", "sets": 3, "reps": "10-15", "rest": 60, "note": "" },
-        { "id": "e5", "name": "Plank", "sets": 3, "reps": "45-60 сек", "rest": 45, "note": "" }
+        { "id": "e601", "name": "Incline dumbbell press", "sets": 4, "reps": "8-10", "rest": 150, "note": "" },
+        { "id": "e602", "name": "Flat bench press", "sets": 3, "reps": "8-10", "rest": 150, "note": "" },
+        { "id": "e603", "name": "Pec deck / Cable fly", "sets": 3, "reps": "12", "rest": 90, "note": "" },
+        { "id": "e604", "name": "Dips", "sets": 3, "reps": "10", "rest": 90, "note": "" },
+        { "id": "e605", "name": "Incline curl", "sets": 3, "reps": "12", "rest": 75, "note": "" },
+        { "id": "e606", "name": "Rope pushdown", "sets": 3, "reps": "12", "rest": 75, "note": "" }
       ]
     },
-    {
-      "id": "d7",
-      "title": "Амралт",
-      "exercises": []
-    }
-  ],
-  "restDays": ["d4", "d7"]
+    { "id": "d7", "title": "Амралт", "exercises": [] }
+  ]
 }

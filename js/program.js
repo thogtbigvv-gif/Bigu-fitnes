@@ -64,13 +64,20 @@ export function getDayById(dayId) {
 }
 
 /**
- * Огноо -> өдрийн id.
- * Даваа = days[0], Ням = days[6]. Хөтөлбөрт 7-оос цөөн өдөр байвал эргэлдэнэ.
+ * Огноо -> өдрийн id. Гарагийн дугаараар шууд холбоно (орон нутгийн цагаар):
+ *   Даваа = d1, Мягмар = d2, Лхагва = d3, Пүрэв = d4,
+ *   Баасан = d5, Бямба = d6, Ням = d7.
+ * Хэрэв тухайн "dN" id хөтөлбөрт байхгүй бол жагсаалтын дараалалд шилжинэ.
  */
 export function getDayIdForDate(dateStr) {
   const days = getDays();
   if (days.length === 0) return null;
-  return days[weekdayIndex(dateStr) % days.length].id;
+
+  const index = weekdayIndex(dateStr); // 0 = Даваа ... 6 = Ням
+  const byId = getDayById(`d${index + 1}`);
+  if (byId) return byId.id;
+
+  return days[index % days.length].id;
 }
 
 export function getDayForDate(dateStr) {
