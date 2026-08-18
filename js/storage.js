@@ -14,6 +14,32 @@ import {
 
 let cache = null;
 
+// Бичилт болох бүрд мэдэгдэх сонсогчид. storage.js өөрөө хэнийг ч import хийхгүй —
+// холбоос нь main.js дээр хийгддэг тул мөчлөг үүсэхгүй.
+const listeners = new Set();
+
+/**
+ * Бичилт бүрд дуудагдах сонсогч бүртгэнэ.
+ * @param {Function} listener
+ * @returns {Function} бүртгэлээс хасах функц
+ */
+export function subscribe(listener) {
+  if (typeof listener !== 'function') return () => {};
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function notify() {
+  for (const listener of listeners) {
+    try {
+      listener();
+    } catch (err) {
+      // Нэг сонсогчийн алдаа хадгалалтыг зогсоохгүй.
+      console.warn('storage сонсогч алдаа өглөө:', err);
+    }
+  }
+}
+
 function emptyState() {
   return { version: SCHEMA_VERSION, sessions: {} };
 }
@@ -108,8 +134,10 @@ export function loadState() {
   return cache;
 }
 
+// saveDay / clearDay / clearAll / reconcile-ийн БИЧИХ цорын ганц цэг.
 function persist() {
   safeWrite(STATE_KEY, JSON.stringify(cache));
+  notify();
 }
 
 /** Тухайн өдрийн сессийг буцаана (байхгүй бол null). */
