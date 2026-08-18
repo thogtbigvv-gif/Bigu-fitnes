@@ -1,0 +1,123 @@
+/* layout.css — апп-ын бүтэц: бүрхүүл, скролл талбар, толгой хэсэг, доод navigation. */
+
+.app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: var(--content-max);
+  margin-inline: auto;
+  padding: var(--s-5) var(--s-4);
+  /* Доод nav + утасны safe-area-ийн доогуур контент орохоос сэргийлнэ */
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px) + var(--s-7));
+}
+
+.screen[hidden] {
+  display: none;
+}
+
+.screen {
+  animation: screen-in var(--t-base) var(--ease);
+}
+
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* --- Дэлгэцийн толгой --- */
+
+.head {
+  margin-bottom: var(--s-5);
+}
+
+.head__date {
+  font-size: var(--f-sm);
+  color: var(--c-text-dim);
+  letter-spacing: 0.01em;
+}
+
+.head__title {
+  margin-top: var(--s-1);
+}
+
+.head__sub {
+  margin-top: var(--s-2);
+  font-size: var(--f-sm);
+  color: var(--c-text-dim);
+}
+
+/* --- Хэсгийн хуваалт --- */
+
+.section {
+  margin-top: var(--s-6);
+}
+
+.section__title {
+  font-size: var(--f-sm);
+  font-weight: 600;
+  color: var(--c-text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--s-3);
+}
+
+.stack > * + * {
+  margin-top: var(--s-3);
+}
+
+.stack-sm > * + * {
+  margin-top: var(--s-2);
+}
+
+/* --- Доод navigation --- */
+
+.tabbar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
+  display: flex;
+  background-color: var(--c-bg-raised);
+  border-top: 1px solid var(--c-border-soft);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tab {
+  flex: 1 1 0;
+  min-height: var(--touch);
+  height: var(--nav-h);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-1);
+  color: var(--c-text-faint);
+  transition: color var(--t-fast) var(--ease);
+}
+
+.tab__label {
+  font-size: var(--f-xs);
+  font-weight: 550;
+}
+
+.tab.is-active {
+  color: var(--c-accent);
+}
+
+.tab:active {
+  background-color: var(--c-bg-sunken);
+}
+
+@media (min-width: 431px) {
+  .tabbar {
+    max-width: var(--content-max);
+    margin-inline: auto;
+    border-inline: 1px solid var(--c-border-soft);
+  }
+}

@@ -1,0 +1,159 @@
+/* base.css — reset, өнгө/зай/фонтын хувьсагч, typography.
+   Дизайны БҮХ утга энд төвлөрнө. Бусад CSS файл var()-оос л уншина. */
+
+:root {
+  /* --- Өнгө: харанхуй сэдэв --- */
+  --c-bg:           #0e1116;
+  --c-bg-raised:    #161b22;
+  --c-bg-sunken:    #0a0d12;
+  --c-surface:      #1b222c;
+  --c-surface-2:    #232b37;
+  --c-border:       #2a3341;
+  --c-border-soft:  #202834;
+
+  --c-text:         #e8edf4;
+  --c-text-dim:     #9aa7b8;
+  --c-text-faint:   #64717f;
+
+  --c-accent:       #4ade80;
+  --c-accent-dim:   #1f6b3d;
+  --c-accent-ink:   #06240f;
+  --c-warn:         #fbbf24;
+  --c-rest:         #60a5fa;
+  --c-miss:         #4b5563;
+
+  /* --- Зай --- */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-7: 32px;
+  --s-8: 40px;
+
+  /* --- Фонт --- */
+  --f-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --f-xs:   12px;
+  --f-sm:   14px;
+  --f-md:   16px;
+  --f-lg:   18px;
+  --f-xl:   22px;
+  --f-2xl:  28px;
+
+  --lh-tight: 1.2;
+  --lh-normal: 1.5;
+
+  /* --- Хэлбэр --- */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --r-full: 999px;
+
+  /* --- Дарах талбарын доод хэмжээ --- */
+  --touch: 44px;
+
+  /* --- Анимаци --- */
+  --t-fast: 150ms;
+  --t-base: 200ms;
+  --ease: cubic-bezier(0.2, 0, 0.2, 1);
+
+  /* --- Бүтэц --- */
+  --nav-h: 60px;
+  --content-max: 480px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+h1, h2, h3, h4,
+p, ul, ol, li, figure {
+  margin: 0;
+  padding: 0;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  background-color: var(--c-bg);
+}
+
+body {
+  min-height: 100dvh;
+  background-color: var(--c-bg);
+  color: var(--c-text);
+  font-family: var(--f-stack);
+  font-size: var(--f-md);
+  line-height: var(--lh-normal);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior-y: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+svg {
+  display: block;
+}
+
+h1 {
+  font-size: var(--f-2xl);
+  line-height: var(--lh-tight);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: var(--f-xl);
+  line-height: var(--lh-tight);
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+h3 {
+  font-size: var(--f-md);
+  line-height: var(--lh-tight);
+  font-weight: 600;
+}
+
+:focus-visible {
+  outline: 2px solid var(--c-accent);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+.u-dim   { color: var(--c-text-dim); }
+.u-faint { color: var(--c-text-faint); }
+.u-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

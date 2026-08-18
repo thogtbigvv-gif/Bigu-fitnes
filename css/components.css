@@ -1,0 +1,433 @@
+/* components.css — карт, checkbox, сетийн товч, progress, badge, banner. */
+
+/* ---------- Progress ---------- */
+
+.progress {
+  margin-top: var(--s-4);
+}
+
+.progress__meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-3);
+  margin-bottom: var(--s-2);
+}
+
+.progress__count {
+  font-size: var(--f-sm);
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.progress__pct {
+  font-size: var(--f-sm);
+  color: var(--c-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.progress__track {
+  height: 8px;
+  border-radius: var(--r-full);
+  background-color: var(--c-surface);
+  overflow: hidden;
+}
+
+.progress__fill {
+  height: 100%;
+  width: 0;
+  border-radius: var(--r-full);
+  background-color: var(--c-accent);
+  transition: width var(--t-base) var(--ease);
+}
+
+.progress.is-done .progress__fill {
+  background-color: var(--c-accent);
+}
+
+/* ---------- Дасгалын карт ---------- */
+
+.card {
+  background-color: var(--c-bg-raised);
+  border: 1px solid var(--c-border-soft);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  transition: border-color var(--t-fast) var(--ease),
+              background-color var(--t-fast) var(--ease);
+}
+
+.card.is-done {
+  border-color: var(--c-accent-dim);
+  background-color: var(--c-bg-sunken);
+}
+
+.card__head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  min-height: 64px;
+  padding: var(--s-3) var(--s-3) var(--s-3) var(--s-2);
+  text-align: left;
+}
+
+.card__head:active {
+  background-color: var(--c-surface);
+}
+
+.card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+}
+
+.card__name {
+  font-size: var(--f-md);
+  font-weight: 600;
+  line-height: var(--lh-tight);
+  overflow-wrap: anywhere;
+  transition: color var(--t-fast) var(--ease);
+}
+
+.card.is-done .card__name {
+  color: var(--c-text-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--c-accent-dim);
+}
+
+.card__meta {
+  margin-top: var(--s-1);
+  font-size: var(--f-sm);
+  color: var(--c-text-dim);
+  font-variant-numeric: tabular-nums;
+}
+
+.card__note {
+  margin-top: var(--s-1);
+  font-size: var(--f-xs);
+  color: var(--c-text-faint);
+}
+
+.card__chevron {
+  flex: 0 0 auto;
+  width: var(--s-6);
+  height: var(--s-6);
+  display: grid;
+  place-items: center;
+  color: var(--c-text-faint);
+  transition: transform var(--t-fast) var(--ease);
+}
+
+.card.is-open .card__chevron {
+  transform: rotate(180deg);
+}
+
+/* ---------- Дугуй checkbox ---------- */
+
+.check {
+  flex: 0 0 auto;
+  width: var(--touch);
+  height: var(--touch);
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+}
+
+.check:active {
+  background-color: var(--c-surface-2);
+}
+
+.check__box {
+  width: 26px;
+  height: 26px;
+  border-radius: var(--r-full);
+  border: 2px solid var(--c-border);
+  display: grid;
+  place-items: center;
+  color: transparent;
+  transition: background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease);
+}
+
+.card.is-done .check__box {
+  background-color: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+
+.card.is-partial .check__box {
+  border-color: var(--c-accent);
+}
+
+/* ---------- Сетийн жагсаалт ---------- */
+
+.sets {
+  display: none;
+  padding: 0 var(--s-3) var(--s-4) var(--s-3);
+  border-top: 1px solid var(--c-border-soft);
+}
+
+.card.is-open .sets {
+  display: block;
+  animation: sets-in var(--t-fast) var(--ease);
+}
+
+@keyframes sets-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.sets__label {
+  margin: var(--s-3) 0 var(--s-2);
+  font-size: var(--f-xs);
+  color: var(--c-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sets__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.set-btn {
+  min-width: var(--touch);
+  height: var(--touch);
+  padding: 0 var(--s-3);
+  border-radius: var(--r-md);
+  border: 1px solid var(--c-border);
+  background-color: var(--c-surface);
+  color: var(--c-text-dim);
+  font-size: var(--f-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease),
+              color var(--t-fast) var(--ease),
+              transform var(--t-fast) var(--ease);
+}
+
+.set-btn:active {
+  transform: scale(0.94);
+}
+
+.set-btn.is-on {
+  background-color: var(--c-accent);
+  border-color: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+
+/* ---------- Banner / төлөв ---------- */
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  border-radius: var(--r-lg);
+  border: 1px solid var(--c-accent-dim);
+  background-color: rgba(74, 222, 128, 0.08);
+  animation: banner-in var(--t-base) var(--ease);
+}
+
+@keyframes banner-in {
+  from { opacity: 0; transform: scale(0.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+.banner__icon {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-full);
+  display: grid;
+  place-items: center;
+  background-color: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+
+.banner__title {
+  font-size: var(--f-md);
+  font-weight: 650;
+  color: var(--c-accent);
+}
+
+.banner__text {
+  font-size: var(--f-sm);
+  color: var(--c-text-dim);
+}
+
+/* ---------- Амралтын өдөр / хоосон төлөв ---------- */
+
+.pad {
+  padding: var(--s-8) var(--s-4);
+  text-align: center;
+  border-radius: var(--r-lg);
+  border: 1px dashed var(--c-border);
+  background-color: var(--c-bg-raised);
+}
+
+.pad__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--s-4);
+  border-radius: var(--r-full);
+  display: grid;
+  place-items: center;
+  background-color: var(--c-surface);
+  color: var(--c-rest);
+}
+
+.pad__title {
+  font-size: var(--f-lg);
+  font-weight: 650;
+}
+
+.pad__text {
+  margin-top: var(--s-2);
+  font-size: var(--f-sm);
+  color: var(--c-text-dim);
+}
+
+/* ---------- Мөрийн жагсаалт (долоо хоног / түүх) ---------- */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-height: var(--touch);
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background-color: var(--c-bg-raised);
+  border: 1px solid var(--c-border-soft);
+}
+
+.row.is-today {
+  border-color: var(--c-accent-dim);
+  background-color: var(--c-surface);
+}
+
+.row__mark {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  display: grid;
+  place-items: center;
+  background-color: var(--c-surface-2);
+  color: var(--c-text-faint);
+}
+
+.row__mark.is-done {
+  background-color: var(--c-accent);
+  color: var(--c-accent-ink);
+}
+
+.row__mark.is-partial {
+  background-color: var(--c-warn);
+  color: var(--c-accent-ink);
+}
+
+.row__mark.is-rest {
+  background-color: var(--c-surface-2);
+  color: var(--c-rest);
+}
+
+.row__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.row__title {
+  font-size: var(--f-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row__meta {
+  font-size: var(--f-xs);
+  color: var(--c-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.row__day {
+  flex: 0 0 auto;
+  width: 34px;
+  text-align: center;
+  font-size: var(--f-xs);
+  font-weight: 600;
+  color: var(--c-text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Badge ---------- */
+
+.badge {
+  flex: 0 0 auto;
+  padding: 3px var(--s-2);
+  border-radius: var(--r-full);
+  font-size: var(--f-xs);
+  font-weight: 600;
+  background-color: var(--c-surface-2);
+  color: var(--c-text-dim);
+  white-space: nowrap;
+}
+
+.badge.is-done {
+  background-color: var(--c-accent-dim);
+  color: var(--c-accent);
+}
+
+.badge.is-partial {
+  background-color: rgba(251, 191, 36, 0.15);
+  color: var(--c-warn);
+}
+
+.badge.is-rest {
+  background-color: rgba(96, 165, 250, 0.15);
+  color: var(--c-rest);
+}
+
+/* ---------- Тоон хураангуй ---------- */
+
+.stats {
+  display: flex;
+  gap: var(--s-3);
+}
+
+.stat {
+  flex: 1 1 0;
+  padding: var(--s-3);
+  border-radius: var(--r-md);
+  background-color: var(--c-bg-raised);
+  border: 1px solid var(--c-border-soft);
+  text-align: center;
+}
+
+.stat__value {
+  font-size: var(--f-xl);
+  font-weight: 700;
+  line-height: var(--lh-tight);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+  margin-top: var(--s-1);
+  font-size: var(--f-xs);
+  color: var(--c-text-faint);
+}
+
+/* ---------- Алдаа ---------- */
+
+.error {
+  padding: var(--s-4);
+  border-radius: var(--r-md);
+  border: 1px solid #7f1d1d;
+  background-color: rgba(127, 29, 29, 0.15);
+  font-size: var(--f-sm);
+  color: #fca5a5;
+}
