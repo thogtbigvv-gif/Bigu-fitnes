@@ -34,6 +34,7 @@
   height: 100%;
   width: 0;
   background-color: var(--accent);
+  transition: width var(--t-bar) var(--ease);
 }
 
 /* ---------- Дасгалын мөр ---------- */
@@ -85,6 +86,26 @@
   display: none;
 }
 
+/* Дөнгөж дарсан мөр: тэмдэг татагдаж, хайрцаг бага зэрэг үсэрнэ */
+.row-ex.is-flash .mark__box {
+  animation: box-pop var(--t-tap) var(--ease);
+}
+
+.row-ex.is-flash.is-done .mark__box svg path {
+  stroke-dasharray: 32;
+  animation: check-draw 180ms var(--ease) forwards;
+}
+
+@keyframes box-pop {
+  from { transform: scale(0.86); }
+  to   { transform: scale(1); }
+}
+
+@keyframes check-draw {
+  from { stroke-dashoffset: 32; }
+  to   { stroke-dashoffset: 0; }
+}
+
 /* Хэсэгчлэн хийсэн: хийсэн сетийн тоо гарна */
 .row-ex.is-partial .mark__box {
   border-color: var(--fg-2);
@@ -111,10 +132,9 @@
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--s1);
-  padding: var(--s3) var(--s4);
+  align-items: center;
+  gap: var(--s3);
+  padding: var(--s3) var(--s3) var(--s3) var(--s4);
   text-align: left;
   transition: background-color var(--t-tap) var(--ease),
               transform var(--t-tap) var(--ease);
@@ -123,6 +143,26 @@
 .row-ex__body:active {
   background-color: var(--bg-3);
   transform: scale(0.98);
+}
+
+.row-ex__text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+/* Мөр задардаг гэдгийг заана — задрахад эргэнэ */
+.row-ex__chevron {
+  flex: 0 0 auto;
+  color: var(--fg-3);
+  transition: transform var(--t-tap) var(--ease);
+}
+
+.row-ex.is-open .row-ex__chevron {
+  transform: rotate(180deg);
+  color: var(--fg-2);
 }
 
 .row-ex__name {
@@ -143,6 +183,10 @@
 }
 
 /* Гүйцэтгэсэн үед: зураас + тунгалаг. Дэвсгэр өөрчлөгдөхгүй. */
+.row-ex__body {
+  opacity: 1;
+}
+
 .row-ex.is-done .row-ex__body {
   opacity: 0.45;
 }
@@ -153,17 +197,29 @@
 
 /* ---------- Сетүүд ---------- */
 
-.sets {
+.sets-wrap {
   display: none;
+}
+
+.row-ex.is-open + .sets-wrap {
+  display: grid;
+  grid-template-rows: 1fr;
+  animation: sets-open var(--t-open) var(--ease);
+}
+
+@keyframes sets-open {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to   { grid-template-rows: 1fr; opacity: 1; }
+}
+
+.sets {
+  min-height: 0;
+  overflow: hidden;
   padding: var(--s3) var(--s4) var(--s4);
   background-color: var(--bg-2);
   border: 1px solid var(--line);
   border-top: none;
   border-radius: 0 0 var(--r2) var(--r2);
-}
-
-.row-ex.is-open + .sets {
-  display: block;
 }
 
 .row-ex.is-open {
@@ -208,14 +264,24 @@
   color: var(--accent-ink);
 }
 
+.set.is-flash {
+  animation: box-pop var(--t-tap) var(--ease);
+}
+
 /* ---------- Дууссан төлөв ---------- */
 
 .done-block {
+  animation: block-in var(--t-open) var(--ease);
   padding: var(--s4);
   background-color: var(--bg-2);
   border: 1px solid var(--line);
   border-left: 2px solid var(--fg);
   border-radius: var(--r1);
+}
+
+@keyframes block-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
 }
 
 .done-block__title {

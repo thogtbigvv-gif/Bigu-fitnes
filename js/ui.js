@@ -28,6 +28,7 @@ import {
 /* ---------------- DOM туслахууд ---------------- */
 
 const CHECK = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.5 5.5L20 6.5"/></svg>';
+const CHEVRON = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg>';
 
 function h(tag, props = {}, children = []) {
   const node = document.createElement(tag);
@@ -60,6 +61,8 @@ const screens = {
 let activeTab = 'today';
 const openCards = new Set(); // нээлттэй байгаа дасгалын id-ууд
 let confirmClear = false;    // "бүгдийг устгах" товч баталгаажуулалт хүлээж байна уу
+let flash = null;            // дөнгөж дарсан элемент — зөвхөн энэ дээр хөдөлгөөн тоглоно
+let lastPct = 0;             // progress bar-ыг хаанаас нь гүйлгэхийг мэдэхийн тулд
 
 /* ---------------- Тооцоолол ---------------- */
 
@@ -114,7 +117,12 @@ function nextTrainingDay(fromDate) {
 function renderProgress(done, total) {
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
   const fill = h('div', { class: 'progress__fill' });
-  fill.style.width = `${pct}%`;
+
+  // Шинээр үүсгэсэн элемент дээр transition ажиллахгүй тул эхлээд
+  // өмнөх хувиар зурж, дараагийн кадрт шинэ хувь руу гүйлгэнэ.
+  fill.style.width = `${lastPct}%`;
+  requestAnimationFrame(() => { fill.style.width = `${pct}%`; });
+  lastPct = pct;
 
   return h('div', { class: 'progress' }, [
     h('div', { class: 'progress__meta' }, [
@@ -145,22 +153,24 @@ function renderExerciseRow(exercise, marks) {
   if (done) classes.push('is-done');
   if (partial) classes.push('is-partial');
   if (open) classes.push('is-open');
+  if (flash && flash.exercise === exercise.id && flash.kind === 'toggle') classes.push('is-flash');
 
   const box = h('span', { class: 'mark__box' }, [
     h('span', { class: 'num', text: partial ? String(doneSets) : '' }),
     h('span', { icon: CHECK, 'aria-hidden': 'true' })
   ]);
 
-  const setButtons = marks.map((on, index) =>
-    h('button', {
+  const setButtons = marks.map((on, index) => {
+    const hit = flash && flash.exercise === exercise.id && flash.index === index;
+    return h('button', {
       type: 'button',
-      class: `set num${on ? ' is-on' : ''}`,
+      class: `set num${on ? ' is-on' : ''}${hit ? ' is-flash' : ''}`,
       'aria-pressed': on ? 'true' : 'false',
       'aria-label': `${index + 1}-р сет`,
       dataset: { action: 'set', exercise: exercise.id, index: String(index) },
       text: String(index + 1)
-    })
-  );
+    });
+  });
 
   return h('li', {}, [
     h('div', { class: classes.join(' ') }, [
@@ -176,17 +186,23 @@ function renderExerciseRow(exercise, marks) {
         type: 'button',
         class: 'row-ex__body',
         'aria-expanded': open ? 'true' : 'false',
+        'aria-label': `${exercise.name} — сетүүдийг харах`,
         dataset: { action: 'open', exercise: exercise.id }
       }, [
-        h('span', { class: 'row-ex__name', text: exercise.name }),
-        h('span', { class: 'row-ex__reps num', text: meta.join(' · ') }),
-        exercise.note ? h('span', { class: 'row-ex__note', text: exercise.note }) : null
+        h('span', { class: 'row-ex__text' }, [
+          h('span', { class: 'row-ex__name', text: exercise.name }),
+          h('span', { class: 'row-ex__reps num', text: meta.join(' · ') }),
+          exercise.note ? h('span', { class: 'row-ex__note', text: exercise.note }) : null
+        ]),
+        h('span', { class: 'row-ex__chevron', icon: CHEVRON, 'aria-hidden': 'true' })
       ])
     ]),
 
-    h('div', { class: 'sets' }, [
-      h('div', { class: 'sets__label label num', text: `Сет — ${doneSets}/${marks.length}` }),
-      h('div', { class: 'sets__row' }, setButtons)
+    h('div', { class: 'sets-wrap' }, [
+      h('div', { class: 'sets' }, [
+        h('div', { class: 'sets__label label num', text: `Сет — ${doneSets}/${marks.length}` }),
+        h('div', { class: 'sets__row' }, setButtons)
+      ])
     ])
   ]);
 }
@@ -231,6 +247,7 @@ function renderToday() {
   }
 
   if (day.isRest) {
+    lastPct = 0;
     for (const node of renderRestDay(date, day)) root.appendChild(node);
     return;
   }
@@ -454,6 +471,8 @@ function handleTodayClick(event) {
     return;
   }
 
+  flash = { exercise: exerciseId, kind: action, index: action === 'set' ? Number(index) : -1 };
+
   const sets = readSets(date, day);
   const marks = sets[exerciseId];
   if (!marks) return;
@@ -472,6 +491,7 @@ function handleTodayClick(event) {
 
   commit(date, day, sets);
   renderToday();
+  flash = null; // дараагийн render дээр дахин тоглохгүй
 }
 
 /* ---------------- Табууд ---------------- */
@@ -481,6 +501,8 @@ const RENDERERS = {
   week: renderWeek,
   history: renderHistory
 };
+
+const TAB_ORDER = ['today', 'week', 'history'];
 
 export function showTab(name) {
   if (!RENDERERS[name]) return;
@@ -495,6 +517,11 @@ export function showTab(name) {
     const isActive = tab.dataset.tab === name;
     tab.classList.toggle('is-active', isActive);
     tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  }
+
+  const indicator = document.getElementById('tab-ind');
+  if (indicator) {
+    indicator.style.transform = `translateX(${TAB_ORDER.indexOf(name) * 100}%)`;
   }
 
   RENDERERS[name]();
