@@ -1,24 +1,36 @@
 // bridge.js — гадагш чиглэсэн "activity feed".
-// Ижил GitHub Pages origin дээр байрлах өөр апп (summer-project) энэ түлхүүрийг
-// уншиж миний дасгалын үр дүнг XP болгоно.
+// Ижил GitHub Pages origin дээр байрлах summer-project энэ түлхүүрийг УНШИЖ,
+// дасгалын үр дүнг өөрийн дүрмээрээ XP болгоно.
 //
 // Энэ файл "gym:state_v1"-д ХЭЗЭЭ Ч бичихгүй — зөвхөн уншина.
+// "summerProjectWebData_v4"-ийг ч уншихгүй — нөгөө тал руу ханддаггүй.
 // Бичдэг цорын ганц түлхүүр нь "gym:bridge".
+//
+// Нийтлэг гэрээ (аппууд бүгд адилхан бичнэ):
+//   { v: 1, app, label, updatedAt: <ms>,
+//     status: { ... уншигч тал тайлбарлахгүй, бүтнээр нь хадгална },
+//     events: [ { id, at, type, value, detail } ... ] }
+//
+// XP-ийн тооцоо ЭНД БАЙХГҮЙ. Дасгалын апп зөвхөн "юу болсныг" мэдээлнэ,
+// түүнийг хэдэн XP болгохыг summer-project-ийн XP_RULES шийднэ.
 
-import { NAMESPACE, calcXp, todayString } from './data.js';
+import { NAMESPACE, HISTORY_DAYS, todayString, parseDateString } from './data.js';
 import { getDayById, getDayForDate } from './program.js';
 import { getDayResult, getRecentDays } from './storage.js';
 
 export const BRIDGE_KEY = NAMESPACE + 'bridge';
 
 const BRIDGE_VERSION = 1;
-const BRIDGE_APP = 'Gym';
 
-/** Хэдэн хоногийн түүхийг гадагш харуулах вэ. */
+// app нь уншигч талын BRIDGE_SOURCES дахь мөртэй таарна.
+const BRIDGE_APP = 'gym';
+const BRIDGE_LABEL = 'Gym';
+
+/** Хэдэн хоногийн дасгалыг event болгож гадагш харуулах вэ. */
 const BRIDGE_DAYS = 14;
 
 /** Хичнээн ч түүхтэй байлаа гэсэн энэ тооноос хэтрэхгүй. */
-const BRIDGE_MAX = 30;
+const BRIDGE_MAX_EVENTS = 30;
 
 // Сүүлд бичсэн агуулга (updatedAt-гүйгээр). Ижил утга дахин бичихээс сэргийлнэ.
 let lastFingerprint = null;
@@ -37,8 +49,9 @@ function seedFingerprint() {
     lastFingerprint = JSON.stringify({
       v: previous.v,
       app: previous.app,
-      today: previous.today,
-      sessions: previous.sessions
+      label: previous.label,
+      status: previous.status,
+      events: previous.events
     });
   } catch (err) {
     // Хуучин утга эвдэрсэн бол тоохгүй — дараагийн бичилт дээр дарж бичигдэнэ.
@@ -51,68 +64,90 @@ function dayOf(date, dayId) {
   return (dayId ? getDayById(dayId) : null) || getDayForDate(date);
 }
 
-/** Өнөөдрийн байдал. Амралтын өдөр бол total/done тэг, XP нь амралтынх. */
-function buildToday() {
+/** Өдрийн үр дүнг { total, done } болгож цэвэрлэнэ (done нь total-оос хэтрэхгүй). */
+function countsOf(result) {
+  const total = Math.max(0, Number(result && result.total) || 0);
+  const done = Math.min(Math.max(0, Number(result && result.done) || 0), total);
+  return { total, done };
+}
+
+/**
+ * Event-ийн цаг (ms). Дуусгасан өдөр бол дуусгасан агшин, эс бөгөөс тухайн
+ * өдрийн үд дунд — ингэснээр эрэмбэ нь үргэлж огнооны дарааллаар гарна.
+ * completedAt нь орон нутгийн "YYYY-MM-DD HH:MM" (storage.localTimestamp).
+ */
+function eventTime(date, completedAt) {
+  if (typeof completedAt === 'string') {
+    const match = completedAt.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/);
+    if (match) {
+      const stamp = parseDateString(match[1]);
+      stamp.setHours(Number(match[2]), Number(match[3]), 0, 0);
+      return stamp.getTime();
+    }
+  }
+  return parseDateString(date).getTime();
+}
+
+/**
+ * Дасгалын өдөр бүрд НЭГ event, хуучнаас шинэ рүү.
+ *
+ * - id = "gym-<YYYY-MM-DD>" — өдрийг дахин нээхэд давхар тоологдохгүй.
+ * - type: бүх дасгал тэмдэглэгдсэн бол "workout.completed", үгүй бол "workout.partial".
+ *   Өдрийн явцад "partial" бичигдээд дараа нь "completed" болж сайжирч болно —
+ *   уншигч тал id-гаар давхардлыг шүүдэг тул энэ нь аюулгүй.
+ * - Нэг ч дасгал дуусгаагүй өдөр (done = 0) болон амралтын өдөр event үүсгэхгүй.
+ */
+function buildEvents() {
+  const rows = [];
+
+  for (const { date, result } of getRecentDays(todayString(), BRIDGE_DAYS)) {
+    if (!result) continue;
+
+    const { total, done } = countsOf(result);
+    if (total <= 0 || done <= 0) continue;
+
+    const day = dayOf(date, result.dayId);
+    const name = day ? day.title : '';
+
+    rows.push({
+      id: `${BRIDGE_APP}-${date}`,
+      at: eventTime(date, result.completedAt),
+      type: done >= total ? 'workout.completed' : 'workout.partial',
+      value: done,
+      detail: name ? `${done}/${total} · ${name}` : `${done}/${total}`
+    });
+  }
+
+  rows.reverse(); // getRecentDays нь шинээс хуучин руу өгдөг
+  return rows.slice(-BRIDGE_MAX_EVENTS);
+}
+
+/** Хамгийн сүүлд дасгал хийсэн өдөр ("YYYY-MM-DD"), олдохгүй бол null. */
+function findLastWorkout() {
+  for (const { date, result } of getRecentDays(todayString(), HISTORY_DAYS)) {
+    if (!result) continue;
+    const { total, done } = countsOf(result);
+    if (total > 0 && done > 0) return date;
+  }
+  return null;
+}
+
+/**
+ * Уншигч тал энэ объектыг бүтнээр нь хадгална (тайлбарлахгүй) —
+ * тиймээс энд хүн уншихад ойлгомжтой утга л байх ёстой.
+ */
+function buildStatus() {
   const date = todayString();
   const result = getDayResult(date);
   const day = dayOf(date, result ? result.dayId : null);
 
-  if (!day) {
-    return { date, dayId: '', title: '', isRest: false, total: 0, done: 0, xp: 0 };
-  }
-
-  const isRest = day.isRest;
-  const total = isRest ? 0 : day.exercises.length;
-  const done = isRest || !result ? 0 : Math.min(result.done, total);
+  const total = day && !day.isRest ? day.exercises.length : 0;
+  const done = Math.min(countsOf(result).done, total);
 
   return {
-    date,
-    dayId: day.id,
-    title: day.title,
-    isRest,
-    total,
-    done,
-    xp: calcXp({ done, total, isRest })
-  };
-}
-
-/**
- * Сүүлийн BRIDGE_DAYS хоногийн тэмдэглэгээтэй өдрүүд, хуучнаас шинэ рүү.
- * Огноо бүр НЭГ бичлэгтэй — өдрийн явцад done/xp өсдөг, уншигч тал зөрүүг тооцно.
- */
-function buildSessions() {
-  const recent = getRecentDays(todayString(), BRIDGE_DAYS); // шинээс хуучин руу
-
-  const rows = [];
-  for (const { date, result } of recent) {
-    if (!result) continue;
-
-    const day = dayOf(date, result.dayId);
-    const total = Number(result.total) || 0;
-    const done = Math.min(Number(result.done) || 0, total);
-
-    rows.push({
-      date,
-      dayId: result.dayId,
-      title: day ? day.title : '',
-      done,
-      total,
-      xp: calcXp({ done, total, isRest: false }),
-      complete: total > 0 && done >= total,
-      completedAt: result.completedAt || null
-    });
-  }
-
-  rows.reverse(); // хуучнаас шинэ рүү
-  return rows.slice(-BRIDGE_MAX);
-}
-
-function buildPayload() {
-  return {
-    v: BRIDGE_VERSION,
-    app: BRIDGE_APP,
-    today: buildToday(),
-    sessions: buildSessions()
+    todayPlan: day ? day.title : '',
+    todayProgress: `${done}/${total}`,
+    lastWorkout: findLastWorkout()
   };
 }
 
@@ -125,16 +160,24 @@ export function publishBridge() {
   try {
     if (!seeded) seedFingerprint();
 
-    const payload = buildPayload();
+    const payload = {
+      v: BRIDGE_VERSION,
+      app: BRIDGE_APP,
+      label: BRIDGE_LABEL,
+      status: buildStatus(),
+      events: buildEvents()
+    };
+
     const fingerprint = JSON.stringify(payload);
     if (fingerprint === lastFingerprint) return false;
 
     window.localStorage.setItem(BRIDGE_KEY, JSON.stringify({
       v: payload.v,
       app: payload.app,
+      label: payload.label,
       updatedAt: Date.now(),
-      today: payload.today,
-      sessions: payload.sessions
+      status: payload.status,
+      events: payload.events
     }));
 
     lastFingerprint = fingerprint;

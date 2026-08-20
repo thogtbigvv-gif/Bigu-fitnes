@@ -1,4 +1,4 @@
-// data.js — тогтмолууд, огнооны хэрэгслүүд, XP тооцооны дүрэм.
+// data.js — тогтмолууд, огнооны хэрэгслүүд.
 // Энд DOM ч байхгүй, localStorage ч байхгүй. Зөвхөн цэвэр утга, цэвэр функц.
 
 export const NAMESPACE = 'gym:';
@@ -18,13 +18,6 @@ export const WEEKDAY_NAMES = [
 ];
 
 export const WEEKDAY_SHORT = ['Да', 'Мя', 'Лх', 'Пү', 'Ба', 'Бя', 'Ня'];
-
-// XP тооцооны дүрэм. Одоохондоо хаашаа ч илгээхгүй, зөвхөн дотооддоо тооцно.
-export const XP_RULES = {
-  perExercise: 10,      // дуусгасан дасгал тутамд
-  completionBonus: 25,  // өдрийг бүтэн дуусгавал нэмэгдэл
-  restDay: 5            // амралтын өдрийг хүндэтгэсэн төлөө
-};
 
 /**
  * Date объектыг ОРОН НУТГИЙН цагаар "YYYY-MM-DD" болгоно.
@@ -90,16 +83,4 @@ export function formatRest(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return s ? `${m}м ${s}с` : `${m}м`;
-}
-
-/**
- * Өдрийн үр дүнгээс XP тооцно.
- * @param {{done:number, total:number, isRest:boolean}} result
- */
-export function calcXp({ done = 0, total = 0, isRest = false } = {}) {
-  if (isRest) return XP_RULES.restDay;
-  if (total <= 0) return 0;
-  let xp = done * XP_RULES.perExercise;
-  if (done >= total) xp += XP_RULES.completionBonus;
-  return xp;
 }
