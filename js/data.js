@@ -8,8 +8,16 @@ export const BACKUP_PREFIX = NAMESPACE + 'backup_';
 
 export const PROGRAM_URL = './data/program.json';
 
-// Түүхийн дэлгэц хэдэн өдрийг харуулах вэ.
+// Түүхийн дэлгэц хамгийн ихдээ хэдэн өдрийг харуулах вэ.
 export const HISTORY_DAYS = 30;
+
+// Хөтлөж эхлээгүй байхад 30 хоосон мөр харуулах нь худал зураг өгнө
+// ("20 өдөр хийгээгүй"). Тиймээс жагсаалт эхний тэмдэглэгээнээс эхэлнэ,
+// гэхдээ дэлгэц хоосон харагдахгүйн тулд наад зах нь энэ хэдэн өдөр гарна.
+export const MIN_HISTORY_DAYS = 7;
+
+// Долоо хоногт хэдэн өдөр (хөтөлбөрийн мөчлөг).
+export const WEEK_DAYS = 7;
 
 // Гарагийн нэрс. Индекс 0 = Даваа ... 6 = Ням.
 // Хөтөлбөрийн days[0] нь Даваа, days[6] нь Ням гэж үзнэ.
@@ -83,4 +91,29 @@ export function formatRest(seconds) {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   return s ? `${m}м ${s}с` : `${m}м`;
+}
+
+/** Секундыг тоолуурын "M:SS" хэлбэрт оруулна. */
+export function formatClock(seconds) {
+  const total = Math.max(0, Math.round(seconds));
+  const m = Math.floor(total / 60);
+  const s = total % 60;
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/** "2026-08-17" + "2026-08-23" -> "8 сарын 17 — 8 сарын 23" */
+export function formatRange(fromDate, toDate) {
+  return `${formatDate(fromDate)} — ${formatDate(toDate)}`;
+}
+
+/** Хоёр огнооны хоорондох өдрийн зөрүү (a - b). */
+export function daysBetween(a, b) {
+  const ms = parseDateString(a).getTime() - parseDateString(b).getTime();
+  return Math.round(ms / 86400000);
+}
+
+/** Дараагийн орон нутгийн шөнө дунд хүртэл хэдэн миллисекунд үлдсэн бэ. */
+export function msUntilMidnight(now = new Date()) {
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 2, 0);
+  return Math.max(1000, next.getTime() - now.getTime());
 }

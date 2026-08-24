@@ -95,3 +95,9 @@ export function exerciseCount(dayId) {
   const day = getDayById(dayId);
   return day ? day.exercises.length : 0;
 }
+
+/** Хөтөлбөрийн нэр. Толгой хэсэгт таних тэмдэг болж гарна. */
+export function getProgramName() {
+  return program ? program.name : '';
+}
+

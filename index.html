@@ -13,16 +13,20 @@
 </head>
 <body>
   <div class="app">
+    <!-- Хадгалалт бүтэхгүй байвал (нууц горим, зай дүүрсэн) энд мессеж гарна. -->
+    <div class="notice" id="notice" role="status" hidden></div>
+
     <main class="app-main" id="app-main">
-      <section class="screen" id="screen-today" aria-labelledby="tab-today"></section>
-      <section class="screen" id="screen-week" aria-labelledby="tab-week" hidden></section>
-      <section class="screen" id="screen-history" aria-labelledby="tab-history" hidden></section>
+      <section class="screen" id="screen-today" role="tabpanel" aria-labelledby="tab-today" tabindex="0"></section>
+      <section class="screen" id="screen-week" role="tabpanel" aria-labelledby="tab-week" tabindex="0" hidden></section>
+      <section class="screen" id="screen-history" role="tabpanel" aria-labelledby="tab-history" tabindex="0" hidden></section>
     </main>
 
-    <nav class="tabbar" id="tabbar" aria-label="Үндсэн цэс">
+    <nav class="tabbar" id="tabbar" role="tablist" aria-label="Үндсэн цэс">
       <span class="tab-ind" id="tab-ind" aria-hidden="true"></span>
 
-      <button class="tab is-active" id="tab-today" type="button" data-tab="today" aria-selected="true">
+      <button class="tab is-active" id="tab-today" type="button" role="tab" data-tab="today"
+              aria-selected="true" aria-controls="screen-today" tabindex="0">
         <span class="tab__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="4.5" width="18" height="16.5" rx="2.5"></rect>
@@ -33,7 +37,8 @@
         <span class="tab__label">Өнөөдөр</span>
       </button>
 
-      <button class="tab" id="tab-week" type="button" data-tab="week" aria-selected="false">
+      <button class="tab" id="tab-week" type="button" role="tab" data-tab="week"
+              aria-selected="false" aria-controls="screen-week" tabindex="-1">
         <span class="tab__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <rect x="3" y="5" width="18" height="14" rx="2.5"></rect>
@@ -43,7 +48,8 @@
         <span class="tab__label">Долоо хоног</span>
       </button>
 
-      <button class="tab" id="tab-history" type="button" data-tab="history" aria-selected="false">
+      <button class="tab" id="tab-history" type="button" role="tab" data-tab="history"
+              aria-selected="false" aria-controls="screen-history" tabindex="-1">
         <span class="tab__icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3.5 12a8.5 8.5 0 1 0 2.9-6.4"></path>

@@ -1,0 +1,56 @@
+// views/week.js — долоо хоногийн тойм.
+//
+// Хураангуй нь урьд зөвхөн "биелсэн" тоог хэлдэг байсан тул дутуу хийсэн
+// өдрүүд бүтэн алга болдог байв. Одоо биелсэн / дутуу / сет гурвуулаа харагдана.
+
+import { WEEKDAY_SHORT, formatRange, startOfWeek, todayString } from '../data.js';
+import { append, clear, h } from '../dom.js';
+import { getProgramName } from '../program.js';
+import { weekSummary } from '../stats.js';
+import { dayRow } from './dayrow.js';
+
+export function renderWeek(root) {
+  clear(root);
+
+  const today = todayString();
+  const monday = startOfWeek(today);
+  const week = weekSummary(monday, today);
+
+  const parts = [`${week.planned} бэлтгэлээс ${week.trained} биелсэн`];
+  if (week.partial) parts.push(`${week.partial} дутуу`);
+
+  append(root, [
+    h('header', { class: 'head' }, [
+      h('div', { class: 'head__eyebrow label', text: getProgramName() }),
+      h('div', { class: 'head__date num', text: formatRange(week.from, week.to) }),
+      h('h1', { class: 'head__title', text: 'Долоо хоног' }),
+      h('div', { class: 'head__sub num', text: parts.join(' · ') })
+    ]),
+
+    week.setsTotal > 0
+      ? h('div', { class: 'meter' }, [
+        h('div', { class: 'meter__row' }, [
+          h('span', { class: 'meter__label label', text: 'Сетийн гүйцэтгэл' }),
+          h('span', {
+            class: 'meter__value num',
+            text: `${week.setsDone}/${week.setsTotal}`
+          })
+        ]),
+        h('div', { class: 'meter__track' }, [
+          (() => {
+            const fill = h('div', { class: 'meter__fill' });
+            fill.style.width = `${Math.round((week.setsDone / week.setsTotal) * 100)}%`;
+            return fill;
+          })()
+        ])
+      ])
+      : null,
+
+    h('section', { class: 'section' }, [
+      h('h2', { class: 'section__title label', text: 'Өдрүүд' }),
+      h('ul', { class: 'list-tight' }, week.days.map((row, index) =>
+        dayRow(row, today, WEEKDAY_SHORT[index])
+      ))
+    ])
+  ]);
+}

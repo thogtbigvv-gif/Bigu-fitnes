@@ -1,5 +1,71 @@
 /* components.css — дасгалын мөр, сетийн тэмдэглэгээ, progress, төлөв, устгах. */
 
+/* ---------- Өдөр солих зурвас (өнөөдөр биш үед л гарна) ---------- */
+
+.daybar {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+  margin-bottom: var(--s4);
+  padding-bottom: var(--s4);
+  border-bottom: 1px solid var(--line);
+}
+
+.daybar__step {
+  flex: 0 0 auto;
+  width: var(--touch);
+  height: var(--touch);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  color: var(--fg-2);
+  transition: background-color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
+}
+
+.daybar__step:active {
+  background-color: var(--bg-3);
+  transform: scale(0.96);
+}
+
+.daybar__step[disabled] {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.daybar__today {
+  flex: 1 1 auto;
+  min-height: var(--touch);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  color: var(--fg);
+  font-size: var(--t-14);
+  font-weight: 600;
+  transition: background-color var(--t-tap) var(--ease);
+}
+
+.daybar__today:active {
+  background-color: var(--bg-3);
+}
+
+/* ---------- Тайлбар мөр (өнгөрсөн / ирээдүйн өдөр) ---------- */
+
+.note {
+  margin-bottom: var(--s4);
+  padding: var(--s3) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--fg-3);
+  border-radius: var(--r1);
+  font-size: var(--t-12);
+  line-height: 1.4;
+  color: var(--fg-2);
+}
+
 /* ---------- Progress: шугаман, 4px, бүтэн өргөн ---------- */
 
 .progress {
@@ -20,7 +86,9 @@
   color: var(--fg);
 }
 
-.progress__pct {
+/* Баруун тал: сетийн нарийвчилсан тоо. Дасгалын тоо бүтэн зургийг өгдөггүй —
+   4 сетээс 3-ыг нь хийсэн нь "хийгээгүй" биш. */
+.progress__sets {
   font-size: var(--t-14);
   color: var(--fg-2);
 }
@@ -195,6 +263,13 @@
   text-decoration: line-through;
 }
 
+/* Ирээдүйн өдөр: харагдана, дарагдахгүй */
+.row-ex.is-locked .mark,
+.set[disabled] {
+  opacity: 0.35;
+  cursor: default;
+}
+
 /* ---------- Сетүүд ---------- */
 
 .sets-wrap {
@@ -268,6 +343,100 @@
   animation: box-pop var(--t-tap) var(--ease);
 }
 
+/* ---------- Амралтын тоолуур ----------
+   program.json дахь `rest` секунд эцэст нь ажиллаж эхлэв.
+   Дуусахад л акцент өнгө орно — өөр үед саарал хэвээр. */
+
+.timer {
+  margin-top: var(--s3);
+  padding: var(--s3);
+  background-color: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  animation: block-in var(--t-open) var(--ease);
+}
+
+.timer__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+}
+
+.timer__label {
+  flex: 0 0 auto;
+}
+
+.timer__value {
+  flex: 1 1 auto;
+  text-align: right;
+  font-size: var(--t-20);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--fg);
+}
+
+.timer__stop {
+  flex: 0 0 auto;
+  min-height: var(--touch);
+  padding: 0 var(--s3);
+  font-size: var(--t-12);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--fg-3);
+}
+
+.timer__stop:active {
+  color: var(--fg-2);
+}
+
+.timer__track {
+  margin-top: var(--s2);
+  height: 2px;
+  background-color: var(--bg-3);
+}
+
+/* Тоолуур бол цаг — хөдөлгөөн нь жигд (linear), бусад шиг ease биш. */
+.timer__fill {
+  height: 100%;
+  background-color: var(--fg-2);
+  transition: width 1000ms linear;
+}
+
+.timer.is-done .timer__value {
+  color: var(--accent);
+}
+
+/* ---------- Долоо хоногийн сетийн хэмжүүр ---------- */
+
+.meter {
+  margin-bottom: var(--s2);
+}
+
+.meter__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s2);
+}
+
+.meter__value {
+  font-size: var(--t-14);
+  color: var(--fg-2);
+}
+
+.meter__track {
+  height: 2px;
+  background-color: var(--bg-3);
+}
+
+.meter__fill {
+  height: 100%;
+  background-color: var(--fg-2);
+  transition: width var(--t-bar) var(--ease);
+}
+
 /* ---------- Дууссан төлөв ---------- */
 
 .done-block {
@@ -332,7 +501,9 @@
 
 /* ---------- Өдрийн мөр (долоо хоног / түүх) ---------- */
 
+/* Одоо мөр бүр дарагдана — тухайн өдрийг нээж, нөхөж тэмдэглэнэ. */
 .row-day {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: var(--s3);
@@ -341,6 +512,14 @@
   background-color: var(--bg-2);
   border: 1px solid var(--line);
   border-radius: var(--r1);
+  text-align: left;
+  transition: background-color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
+}
+
+.row-day:active {
+  background-color: var(--bg-3);
+  transform: scale(0.99);
 }
 
 .row-day.is-today {
@@ -350,6 +529,11 @@
 
 .row-day.is-idle {
   opacity: 0.55;
+}
+
+/* Амралт бол алдаа ч биш, амжилт ч биш — хэмнэлийн цаад давхарга. */
+.row-day.is-quiet {
+  opacity: 0.45;
 }
 
 .row-day__wd {
@@ -398,9 +582,11 @@
 .row-day__body {
   flex: 1 1 auto;
   min-width: 0;
+  display: block;
 }
 
 .row-day__title {
+  display: block;
   font-size: var(--t-14);
   font-weight: 600;
   line-height: 1.25;
@@ -408,8 +594,16 @@
 }
 
 .row-day__meta {
+  display: block;
   font-size: var(--t-12);
   color: var(--fg-3);
+}
+
+/* Мөр нээгддэг гэдгийг чимээгүй заана */
+.row-day__go {
+  flex: 0 0 auto;
+  color: var(--fg-3);
+  opacity: 0.5;
 }
 
 .row-day__state {
@@ -426,24 +620,59 @@
   color: var(--fg);
 }
 
+/* ---------- Цуваа ----------
+   "Хэдэн өдөр дараалан барив" гэдэг нь 30 хоногийн нийлбэрээс илүү
+   шууд ойлгогддог тул хамгийн дээр гарна. */
+
+.streak {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+  padding: var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--fg-3);
+  border-radius: var(--r1);
+}
+
+.streak__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.streak__value {
+  font-size: var(--t-16);
+  font-weight: 600;
+}
+
+.streak__rate {
+  flex: 0 0 auto;
+  font-size: var(--t-14);
+  color: var(--fg-2);
+}
+
 /* ---------- Тоон хураангуй ---------- */
 
+/* Дөрвөн төлөв (биелсэн / дутуу / хийгээгүй / амралт) тул 2x2 сүлжээ.
+   Хоорондын зураас нь gap дээр гарч байгаа дэвсгэр — нэмэлт border хэрэггүй. */
 .stats {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background-color: var(--line);
   border: 1px solid var(--line);
   border-radius: var(--r1);
   overflow: hidden;
 }
 
 .stat {
-  flex: 1 1 0;
   padding: var(--s4) var(--s2);
   background-color: var(--bg-2);
   text-align: center;
-}
-
-.stat + .stat {
-  border-left: 1px solid var(--line);
 }
 
 .stat__value {
