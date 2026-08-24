@@ -12,7 +12,18 @@ import {
   shiftDate
 } from './data.js';
 
+const STORAGE_BLOCKED =
+  'Тэмдэглэгээ энэ хөтөч дээр хадгалагдахгүй байна. ' +
+  'Нууц горим (private) эсвэл сайтын өгөгдөл хаалттай байж магадгүй.';
+
+const STORAGE_FULL =
+  'Хөтчийн хадгалах зай дүүрсэн байна. Тэмдэглэгээ хадгалагдахгүй.';
+
 let cache = null;
+
+// Хадгалалт бүтэхгүй байвал (private mode, quota дүүрсэн) энд мессеж үлдэнэ.
+// UI үүнийг уншаад хэрэглэгчид ил хэлнэ — чимээгүй алдагдах нь хамгийн муу төлөв.
+let storageError = null;
 
 // Бичилт болох бүрд мэдэгдэх сонсогчид. storage.js өөрөө хэнийг ч import хийхгүй —
 // холбоос нь main.js дээр хийгддэг тул мөчлөг үүсэхгүй.
@@ -54,6 +65,7 @@ function safeRead(key) {
     return window.localStorage.getItem(key);
   } catch (err) {
     console.warn('localStorage уншиж чадсангүй:', err);
+    storageError = STORAGE_BLOCKED;
     return null;
   }
 }
@@ -61,11 +73,21 @@ function safeRead(key) {
 function safeWrite(key, value) {
   try {
     window.localStorage.setItem(key, value);
+    if (storageError) storageError = null; // дахин ажиллаж эхэлсэн бол мессежээ буцаана
     return true;
   } catch (err) {
     console.warn('localStorage бичиж чадсангүй:', err);
+    storageError = err && err.name === 'QuotaExceededError' ? STORAGE_FULL : STORAGE_BLOCKED;
     return false;
   }
+}
+
+/**
+ * Хадгалалт эвдэрсэн эсэх. Эвдэрсэн бол хүнд ойлгомжтой мессеж, эс бөгөөс null.
+ * UI үүнийг мэдэгдэл болгон харуулна.
+ */
+export function getStorageError() {
+  return storageError;
 }
 
 /**
@@ -136,8 +158,20 @@ export function loadState() {
 
 // saveDay / clearDay / clearAll / reconcile-ийн БИЧИХ цорын ганц цэг.
 function persist() {
-  safeWrite(STATE_KEY, JSON.stringify(cache));
+  const ok = safeWrite(STATE_KEY, JSON.stringify(cache));
   notify();
+  return ok;
+}
+
+/**
+ * Кэшийг хаяж, localStorage-оос дахин уншина.
+ * Ижил апп өөр табд нээлттэй байхад ("storage" event) хэрэгтэй —
+ * үгүй бол нэг таб дээр тэмдэглэсэн зүйл нөгөө дээр нь харагдахгүй, улмаар
+ * тэр таб хуучин төлөвөө дарж бичих эрсдэлтэй.
+ */
+export function reload() {
+  cache = null;
+  return loadState();
 }
 
 /** Тухайн өдрийн сессийг буцаана (байхгүй бол null). */
@@ -154,6 +188,16 @@ export function getDayResult(date) {
   if (!session) return null;
   const { dayId, done, total, completedAt } = session;
   return { date, dayId, done, total, completedAt };
+}
+
+/**
+ * Хамгийн эртний тэмдэглэгээтэй огноо ("YYYY-MM-DD"), огт байхгүй бол null.
+ * Түүхийн дэлгэц үүнээс өмнөх хоосон өдрүүдийг "хийгээгүй" гэж тоолохгүй.
+ */
+export function firstSessionDate() {
+  const dates = Object.keys(loadState().sessions);
+  if (dates.length === 0) return null;
+  return dates.sort()[0];
 }
 
 /** Тухайн өдрийн сет тэмдэглэгээ: { exerciseId: [true, false, ...] } */
@@ -282,12 +326,3 @@ export function getRecentDays(endDate, count = HISTORY_DAYS) {
   return list;
 }
 
-/** Долоо хоногийн 7 өдрийн үр дүн (Даваа гаригаас эхэлнэ). */
-export function getWeekResults(mondayDate) {
-  const list = [];
-  for (let i = 0; i < 7; i += 1) {
-    const date = shiftDate(mondayDate, i);
-    list.push({ date, result: getDayResult(date) });
-  }
-  return list;
-}
