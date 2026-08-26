@@ -1,0 +1,11 @@
+{
+  "name": "bigu-fitness",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Өдөр тутмын дасгалын төлөвлөгөө тэмдэглэгч — build алхамгүй, статик ES module апп.",
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "serve": "python3 -m http.server 8000"
+  }
+}

@@ -26,8 +26,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Эвдэрсэн код амьд сайт руу гарах ёсгүй — тест унавал энд зогсоно.
+      - name: Тест
+        run: npm test
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
+
+      # Хөгжүүлэлтийн файлууд сайт дээр гарах шаардлагагүй.
+      - name: Хөгжүүлэлтийн файлуудыг хасах
+        run: rm -rf tests node_modules jsconfig.json package.json package-lock.json
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

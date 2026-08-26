@@ -13,13 +13,28 @@ export const ICONS = {
 };
 
 /**
+ * @typedef {Object} ElementProps
+ * @property {string} [class]    className
+ * @property {string} [text]     textContent (аюулгүй — хэрэглэгчийн текст үргэлж энд ордог)
+ * @property {string} [icon]     innerHTML (ЗӨВХӨН дээрх ICONS доторх тогтмол SVG)
+ * @property {Record<string, string>} [dataset] data-* талбарууд
+ * @property {Record<string, string>} [style]   инлайн загвар (хэмжээ, өргөн гэх мэт)
+ */
+
+/**
  * Элемент үүсгэнэ.
  *   class   -> className
- *   text    -> textContent (аюулгүй, хэрэглэгчийн текст үргэлж энд ордог)
- *   icon    -> innerHTML (ЗӨВХӨН дээрх ICONS доторх тогтмол SVG)
+ *   text    -> textContent
+ *   icon    -> innerHTML (зөвхөн дотоод тогтмол)
  *   dataset -> data-* талбарууд
+ *   style   -> инлайн загварын талбарууд
  *   бусад   -> setAttribute (true бол хоосон утгатай атрибут)
  * null / false утгатай prop болон child алгасагдана.
+ *
+ * @param {string} tag
+ * @param {ElementProps & Record<string, any>} [props]
+ * @param {Array<Node|null|false|undefined>|Node|null} [children]
+ * @returns {HTMLElement}
  */
 export function h(tag, props = {}, children = []) {
   const node = document.createElement(tag);
@@ -30,29 +45,42 @@ export function h(tag, props = {}, children = []) {
     else if (key === 'text') node.textContent = value;
     else if (key === 'icon') node.innerHTML = value;
     else if (key === 'dataset') Object.assign(node.dataset, value);
+    else if (key === 'style') Object.assign(node.style, value);
     else node.setAttribute(key, value === true ? '' : String(value));
   }
 
-  for (const child of [].concat(children)) {
+  for (const child of [].concat(/** @type {any} */ (children))) {
     if (child) node.appendChild(child);
   }
 
   return node;
 }
 
-/** Хүүхдүүдийг нь бүрэн цэвэрлэнэ. */
+/**
+ * Хүүхдүүдийг нь бүрэн цэвэрлэнэ.
+ * @param {HTMLElement} node
+ */
 export function clear(node) {
   node.replaceChildren();
 }
 
-/** Богино id хайлт. */
+/**
+ * Богино id хайлт.
+ * @param {string} id
+ * @returns {HTMLElement|null}
+ */
 export function el(id) {
   return document.getElementById(id);
 }
 
-/** Нэг зэрэг олон элемент root-д залгана (null-ыг алгасна). */
+/**
+ * Нэг зэрэг олон элемент root-д залгана (null-ыг алгасна).
+ * @param {HTMLElement} root
+ * @param {Array<Node|null|false|undefined>|Node|null} nodes
+ * @returns {HTMLElement}
+ */
 export function append(root, nodes) {
-  for (const node of [].concat(nodes)) {
+  for (const node of [].concat(/** @type {any} */ (nodes))) {
     if (node) root.appendChild(node);
   }
   return root;

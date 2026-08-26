@@ -1,0 +1,25 @@
+{
+  // Төсөл нь build алхамгүй. Гэхдээ JSDoc-оор бичигдсэн төрлүүд нь editor
+  // болон `npx tsc --noEmit` дээр БОДИТ шалгалт болж ажиллана — алдааг
+  // хөтөч дээр биш, бичиж байхад нь барина.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "checkJs": true,
+    "allowJs": true,
+    "noEmit": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "noImplicitAny": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  // Зөвхөн аппын код. tests/ нь node:test дээр БОДИТООР ажиллаж
+  // шалгагддаг тул энд оруулбал @types/node шаардах болно — статик,
+  // хамааралгүй төсөл дээр тэр нь дэмий ачаалал.
+  "include": ["js/**/*.js"]
+}

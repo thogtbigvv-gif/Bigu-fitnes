@@ -11,13 +11,16 @@ import {
   formatClock,
   formatDateLong,
   formatRest,
+  percent,
   shiftDate,
+  timeOfTimestamp,
   weekdayIndex
 } from '../data.js';
 import { ICONS, append, clear, h } from '../dom.js';
 import { getDayForDate, getProgramName } from '../program.js';
 import { getDayResult } from '../storage.js';
 import {
+  countDone,
   countSets,
   isExerciseDone,
   nextTrainingDay,
@@ -25,16 +28,31 @@ import {
 } from '../stats.js';
 import * as timer from '../timer.js';
 
+/** @typedef {import('../types.js').Day} Day */
+/** @typedef {import('../types.js').Exercise} Exercise */
+
 // progress bar-ыг хаанаас нь гүйлгэхийг мэдэхийн тулд сүүлийн хувийг сануулна.
 let lastPct = 0;
+
+/** Хүлээгдэж байгаа хөдөлгөөний хүсэлт — давхарлахаас сэргийлнэ. */
+/** @type {number|null} */
+let progressFrame = null;
 
 /** Дэлгэц солигдоход progress дэмий гүйхээс сэргийлж тэглэнэ. */
 export function resetProgress() {
   lastPct = 0;
+  if (progressFrame !== null) {
+    cancelAnimationFrame(progressFrame);
+    progressFrame = null;
+  }
 }
 
 /* ---------------- Толгой хэсэг ---------------- */
 
+/**
+ * @param {string} date
+ * @param {string} today
+ */
 function renderDayBar(date, today) {
   const previous = shiftDate(date, -1);
   const next = shiftDate(date, 1);
@@ -65,14 +83,26 @@ function renderDayBar(date, today) {
   ]);
 }
 
+/**
+ * @param {number} done
+ * @param {number} total
+ * @param {number} setsDone
+ * @param {number} setsTotal
+ */
 function renderProgress(done, total, setsDone, setsTotal) {
-  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const pct = percent(done, total);
   const fill = h('div', { class: 'progress__fill' });
 
   // Шинээр үүсгэсэн элемент дээр transition ажиллахгүй тул эхлээд
   // өмнөх хувиар зурж, дараагийн кадрт шинэ хувь руу гүйлгэнэ.
   fill.style.width = `${lastPct}%`;
-  requestAnimationFrame(() => { fill.style.width = `${pct}%`; });
+  if (progressFrame !== null) cancelAnimationFrame(progressFrame);
+  progressFrame = requestAnimationFrame(() => {
+    progressFrame = null;
+    // Элемент нь хүртэл дэлгэцэнд байгаа эсэхийг шалгана — хурдан дараалсан
+    // дахин зурагдалт дээр аль хэдийн хаягдсан зангилаа руу бичихгүй.
+    if (fill.isConnected) fill.style.width = `${pct}%`;
+  });
   lastPct = pct;
 
   return h('div', { class: 'progress' }, [
@@ -86,11 +116,17 @@ function renderProgress(done, total, setsDone, setsTotal) {
       'aria-valuemin': '0',
       'aria-valuemax': String(total),
       'aria-valuenow': String(done),
+      'aria-valuetext': `${total} дасгалаас ${done} биелсэн`,
       'aria-label': 'Гүйцэтгэл'
     }, [fill])
   ]);
 }
 
+/**
+ * @param {string} date
+ * @param {Day} day
+ * @param {HTMLElement|null} extra
+ */
 function renderHead(date, day, extra) {
   return h('header', { class: 'head' }, [
     h('div', { class: 'head__eyebrow label', text: getProgramName() }),
@@ -102,6 +138,12 @@ function renderHead(date, day, extra) {
 
 /* ---------------- Амралтын өдөр ---------------- */
 
+/**
+ * @param {HTMLElement} root
+ * @param {string} date
+ * @param {Day} day
+ * @param {boolean} isToday
+ */
 function renderRest(root, date, day, isToday) {
   const next = nextTrainingDay(date);
 
@@ -131,12 +173,13 @@ function renderRest(root, date, day, isToday) {
 
 /* ---------------- Амралтын тоолуур ---------------- */
 
+/** @param {Exercise} exercise */
 function renderTimer(exercise) {
   const shot = timer.snapshot();
   if (!shot || shot.exerciseId !== exercise.id) return null;
 
   const fill = h('div', { class: 'timer__fill' });
-  fill.style.width = `${(shot.remaining / shot.seconds) * 100}%`;
+  fill.style.width = `${shot.seconds > 0 ? percent(shot.remaining, shot.seconds) : 0}%`;
 
   return h('div', {
     class: `timer${shot.finished ? ' is-done' : ''}`,
@@ -162,6 +205,11 @@ function renderTimer(exercise) {
 
 /* ---------------- Дасгалын мөр ---------------- */
 
+/**
+ * @param {Exercise} exercise
+ * @param {boolean[]} marks
+ * @param {{openCards: Set<string>, editable: boolean, flash: {exercise: string, kind: string, index: number}|null}} ctx
+ */
 function renderExerciseRow(exercise, marks, ctx) {
   const done = isExerciseDone(marks);
   const doneSets = marks.filter(Boolean).length;
@@ -191,7 +239,7 @@ function renderExerciseRow(exercise, marks, ctx) {
       class: `set num${on ? ' is-on' : ''}${hit ? ' is-flash' : ''}`,
       disabled: !editable,
       'aria-pressed': on ? 'true' : 'false',
-      'aria-label': `${index + 1}-р сет`,
+      'aria-label': `${exercise.name}, ${index + 1}-р сет`,
       dataset: editable ? { action: 'set', exercise: exercise.id, index: String(index) } : {},
       text: String(index + 1)
     });
@@ -241,7 +289,8 @@ function renderExerciseRow(exercise, marks, ctx) {
 
 /**
  * @param {HTMLElement} root
- * @param {{date:string, today:string, openCards:Set<string>, flash:object|null}} ctx
+ * @param {{date: string, today: string, openCards: Set<string>,
+ *          flash: {exercise: string, kind: string, index: number}|null}} ctx
  */
 export function renderDay(root, ctx) {
   clear(root);
@@ -270,10 +319,7 @@ export function renderDay(root, ctx) {
 
   const sets = readSets(date, day);
   const total = day.exercises.length;
-  const done = day.exercises.reduce(
-    (sum, exercise) => sum + (isExerciseDone(sets[exercise.id]) ? 1 : 0),
-    0
-  );
+  const done = countDone(day, sets);
   const setCounts = countSets(day, sets);
   const isComplete = total > 0 && done >= total;
 
@@ -297,12 +343,13 @@ export function renderDay(root, ctx) {
 
   if (isComplete) {
     const result = getDayResult(date);
+    const at = timeOfTimestamp(result && result.completedAt);
     root.appendChild(h('div', { class: 'done-block' }, [
       h('div', { class: 'done-block__title', text: 'Бэлтгэл дууслаа' }),
       h('div', {
         class: 'done-block__text num',
-        text: result && result.completedAt
-          ? `Дуусгасан ${result.completedAt.slice(11)} · ${total}/${total} дасгал`
+        text: at
+          ? `Дуусгасан ${at} · ${total}/${total} дасгал`
           : `${total}/${total} дасгал тэмдэглэгдсэн`
       })
     ]));
@@ -311,7 +358,11 @@ export function renderDay(root, ctx) {
   root.appendChild(h('section', { class: 'section' }, [
     h('h2', { class: 'section__title label', text: 'Дасгалууд' }),
     h('ul', { class: 'list' }, day.exercises.map((exercise) =>
-      renderExerciseRow(exercise, sets[exercise.id], { ...ctx, editable })
+      renderExerciseRow(exercise, sets[exercise.id] || [], {
+        openCards: ctx.openCards,
+        flash: ctx.flash,
+        editable
+      })
     ))
   ]));
 }
