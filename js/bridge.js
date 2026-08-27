@@ -14,9 +14,13 @@
 // XP-ийн тооцоо ЭНД БАЙХГҮЙ. Дасгалын апп зөвхөн "юу болсныг" мэдээлнэ,
 // түүнийг хэдэн XP болгохыг summer-project-ийн XP_RULES шийднэ.
 
-import { NAMESPACE, HISTORY_DAYS, todayString, parseDateString } from './data.js';
+import { NAMESPACE, HISTORY_DAYS, isTimestamp, todayString, parseDateString } from './data.js';
 import { getDayById, getDayForDate } from './program.js';
 import { getDayResult, getRecentDays } from './storage.js';
+import { readJson, writeJson } from './safe-storage.js';
+
+/** @typedef {import('./types.js').DayResult} DayResult */
+/** @typedef {import('./types.js').Day} Day */
 
 export const BRIDGE_KEY = NAMESPACE + 'bridge';
 
@@ -32,9 +36,23 @@ const BRIDGE_DAYS = 14;
 /** Хичнээн ч түүхтэй байлаа гэсэн энэ тооноос хэтрэхгүй. */
 const BRIDGE_MAX_EVENTS = 30;
 
+/**
+ * Хэдэн миллисекунд хүлээгээд нэгтгэж бичих вэ.
+ *
+ * Сет тэмдэглэх бүрд feed-ийг бүтнээр нь дахин барих нь (14 хоногийн үр дүн +
+ * 30 хоногийн хайлт + хоёр удаагийн JSON.stringify) шаардлагагүй ажил.
+ * Хэрэглэгч 7 дасгалын 26 сетийг дараалан дарахад тэр ажил 26 удаа давтагдана.
+ * Одоо дарааллын ТӨГСГӨЛД нэг л удаа бичигдэнэ.
+ */
+const PUBLISH_DEBOUNCE_MS = 300;
+
 // Сүүлд бичсэн агуулга (updatedAt-гүйгээр). Ижил утга дахин бичихээс сэргийлнэ.
+/** @type {string|null} */
 let lastFingerprint = null;
 let seeded = false;
+
+/** @type {ReturnType<typeof setTimeout>|null} */
+let pending = null;
 
 /**
  * Хуудас дахин ачаалагдахад ч дэмий бичихгүйн тулд одоо байгаа gym:bridge-ээс
@@ -42,10 +60,13 @@ let seeded = false;
  */
 function seedFingerprint() {
   seeded = true;
+  const stored = readJson(BRIDGE_KEY);
+  if (!stored || !stored.value || typeof stored.value !== 'object') {
+    lastFingerprint = null;
+    return;
+  }
+  const previous = /** @type {Record<string, unknown>} */ (stored.value);
   try {
-    const raw = window.localStorage.getItem(BRIDGE_KEY);
-    if (!raw) return;
-    const previous = JSON.parse(raw);
     lastFingerprint = JSON.stringify({
       v: previous.v,
       app: previous.app,
@@ -59,12 +80,21 @@ function seedFingerprint() {
   }
 }
 
-/** Тухайн өдрийн хөтөлбөрийн тодорхойлолт. Хадгалсан dayId нь эрх мэдэлтэй. */
+/**
+ * Тухайн өдрийн хөтөлбөрийн тодорхойлолт. Хадгалсан dayId нь эрх мэдэлтэй.
+ * @param {string} date
+ * @param {string|null|undefined} dayId
+ * @returns {Day|null}
+ */
 function dayOf(date, dayId) {
   return (dayId ? getDayById(dayId) : null) || getDayForDate(date);
 }
 
-/** Өдрийн үр дүнг { total, done } болгож цэвэрлэнэ (done нь total-оос хэтрэхгүй). */
+/**
+ * Өдрийн үр дүнг { total, done } болгож цэвэрлэнэ (done нь total-оос хэтрэхгүй).
+ * @param {DayResult|null|undefined} result
+ * @returns {{total: number, done: number}}
+ */
 function countsOf(result) {
   const total = Math.max(0, Number(result && result.total) || 0);
   const done = Math.min(Math.max(0, Number(result && result.done) || 0), total);
@@ -74,16 +104,21 @@ function countsOf(result) {
 /**
  * Event-ийн цаг (ms). Дуусгасан өдөр бол дуусгасан агшин, эс бөгөөс тухайн
  * өдрийн үд дунд — ингэснээр эрэмбэ нь үргэлж огнооны дарааллаар гарна.
- * completedAt нь орон нутгийн "YYYY-MM-DD HH:MM" (storage.localTimestamp).
+ * completedAt нь орон нутгийн "YYYY-MM-DD HH:MM" (data.localTimestamp).
+ * @param {string} date
+ * @param {string|null} completedAt
+ * @returns {number}
  */
 function eventTime(date, completedAt) {
-  if (typeof completedAt === 'string') {
-    const match = completedAt.match(/^(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})/);
-    if (match) {
-      const stamp = parseDateString(match[1]);
-      stamp.setHours(Number(match[2]), Number(match[3]), 0, 0);
-      return stamp.getTime();
-    }
+  if (isTimestamp(completedAt)) {
+    const stamp = parseDateString(/** @type {string} */ (completedAt).slice(0, 10));
+    stamp.setHours(
+      Number(/** @type {string} */ (completedAt).slice(11, 13)),
+      Number(/** @type {string} */ (completedAt).slice(14, 16)),
+      0,
+      0
+    );
+    return stamp.getTime();
   }
   return parseDateString(date).getTime();
 }
@@ -96,6 +131,7 @@ function eventTime(date, completedAt) {
  *   Өдрийн явцад "partial" бичигдээд дараа нь "completed" болж сайжирч болно —
  *   уншигч тал id-гаар давхардлыг шүүдэг тул энэ нь аюулгүй.
  * - Нэг ч дасгал дуусгаагүй өдөр (done = 0) болон амралтын өдөр event үүсгэхгүй.
+ * @returns {Array<{id: string, at: number, type: string, value: number, detail: string}>}
  */
 function buildEvents() {
   const rows = [];
@@ -122,7 +158,10 @@ function buildEvents() {
   return rows.slice(-BRIDGE_MAX_EVENTS);
 }
 
-/** Хамгийн сүүлд дасгал хийсэн өдөр ("YYYY-MM-DD"), олдохгүй бол null. */
+/**
+ * Хамгийн сүүлд дасгал хийсэн өдөр ("YYYY-MM-DD"), олдохгүй бол null.
+ * @returns {string|null}
+ */
 function findLastWorkout() {
   for (const { date, result } of getRecentDays(todayString(), HISTORY_DAYS)) {
     if (!result) continue;
@@ -152,11 +191,12 @@ function buildStatus() {
 }
 
 /**
- * gym:bridge түлхүүрийг шинэчилнэ.
- * Алдаа гарвал (private mode, quota) console.warn-оор дуусна — апп унахгүй.
+ * gym:bridge түлхүүрийг ШУУД шинэчилнэ.
+ * Алдаа гарвал safe-storage нь чимээгүй барина — апп унахгүй.
  * @returns {boolean} үнэхээр бичсэн эсэх
  */
 export function publishBridge() {
+  cancelPending();
   try {
     if (!seeded) seedFingerprint();
 
@@ -171,19 +211,52 @@ export function publishBridge() {
     const fingerprint = JSON.stringify(payload);
     if (fingerprint === lastFingerprint) return false;
 
-    window.localStorage.setItem(BRIDGE_KEY, JSON.stringify({
-      v: payload.v,
-      app: payload.app,
-      label: payload.label,
-      updatedAt: Date.now(),
-      status: payload.status,
-      events: payload.events
-    }));
-
-    lastFingerprint = fingerprint;
-    return true;
+    const ok = writeJson(BRIDGE_KEY, { ...payload, updatedAt: Date.now() });
+    // Бичилт бүтээгүй бол хурууны хээг ШИНЭЧЛЭХГҮЙ — эс бөгөөс хадгалалт
+    // сэргэсний дараа "аль хэдийн бичсэн" гэж андуурч мөнхөд алгасна.
+    if (ok) lastFingerprint = fingerprint;
+    return ok;
   } catch (err) {
     console.warn('gym:bridge бичигдсэнгүй:', err);
     return false;
   }
+}
+
+function cancelPending() {
+  if (pending) {
+    clearTimeout(pending);
+    pending = null;
+  }
+}
+
+/**
+ * Богино хугацааны дараа нэгтгэж бичнэ. Дараалсан тэмдэглэгээ бүрд биш,
+ * тэдгээрийн ТӨГСГӨЛД нэг л удаа ажиллана.
+ */
+export function schedulePublish() {
+  if (pending) return;
+  pending = setTimeout(() => {
+    pending = null;
+    publishBridge();
+  }, PUBLISH_DEBOUNCE_MS);
+}
+
+/**
+ * Хүлээгдэж байгаа бичилтийг ЯГ ОДОО гүйцээнэ.
+ * Апп-ыг хаах / далд болгох агшинд дуудагдана — эс бөгөөс сүүлийн хэдэн сет
+ * feed рүү гарч амжихгүй үлдэнэ.
+ * @returns {boolean}
+ */
+export function flushBridge() {
+  return publishBridge();
+}
+
+/**
+ * Тестэд зориулж дотоод төлөвийг тэглэнэ (хуруу хээ, хүлээгдэж буй бичилт).
+ * Аппын ажиллагаанд дуудагдахгүй.
+ */
+export function __resetForTests() {
+  cancelPending();
+  lastFingerprint = null;
+  seeded = false;
 }

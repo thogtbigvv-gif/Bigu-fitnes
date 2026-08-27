@@ -12,13 +12,20 @@ import { getProgramName } from '../program.js';
 import { historySummary } from '../stats.js';
 import { dayRow } from './dayrow.js';
 
+/** @typedef {import('../types.js').DayRow} DayRow */
+
 /** Устгах товч баталгаажуулалт хүлээж байгаа эсэх (таб солиход тайлагдана). */
 let confirmClear = false;
 
+/** @param {boolean} value */
 export function armClear(value) {
-  confirmClear = value;
+  confirmClear = Boolean(value);
 }
 
+/**
+ * @param {number} value
+ * @param {string} label
+ */
 function statTile(value, label) {
   return h('div', { class: 'stat' }, [
     h('div', { class: 'stat__value num', text: String(value) }),
@@ -26,6 +33,7 @@ function statTile(value, label) {
   ]);
 }
 
+/** @param {{streak: number, rate: number}} summary */
 function renderStreak(summary) {
   const line = summary.streak > 0
     ? `Цуваа ${summary.streak} бэлтгэл`
@@ -43,6 +51,10 @@ function renderStreak(summary) {
   ]);
 }
 
+/**
+ * @param {{label: string, note: string, rows: DayRow[]}} group
+ * @param {string} today
+ */
 function renderWeekGroup(group, today) {
   return h('section', { class: 'group' }, [
     h('div', { class: 'group__head' }, [
@@ -58,8 +70,12 @@ function renderWeekGroup(group, today) {
 /**
  * Бүх тэмдэглэгээг устгах хэсэг. Санамсаргүй дарахаас сэргийлж хоёр алхамтай:
  * эхний дарахад "Итгэлтэй байна уу?" болж хувирна.
+ *
+ * Тэмдэглэгээ огт байхгүй бол устгах юу ч байхгүй — товчийг харуулахгүй.
+ * @param {boolean} hasData
  */
-function renderDangerZone() {
+function renderDangerZone(hasData) {
+  if (!hasData) return null;
   const armed = confirmClear;
 
   return h('section', { class: 'section' }, [
@@ -84,11 +100,13 @@ function renderDangerZone() {
   ]);
 }
 
+/** @param {HTMLElement} root */
 export function renderHistory(root) {
   clear(root);
 
   const today = todayString();
   const summary = historySummary(today, HISTORY_DAYS);
+  const hasData = summary.done + summary.partial > 0;
 
   append(root, [
     h('header', { class: 'head' }, [
@@ -111,5 +129,5 @@ export function renderHistory(root) {
     root.appendChild(renderWeekGroup(group, today));
   }
 
-  root.appendChild(renderDangerZone());
+  append(root, [renderDangerZone(hasData)]);
 }

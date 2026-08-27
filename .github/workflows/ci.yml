@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Тест ба төрлийн шалгалт
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Аппад ямар ч хамаарал байхгүй — тест нь Node-ийн дотоод
+      # `node:test` дээр шууд ажиллана.
+      - name: Тест
+        run: npm test
+
+      # JSDoc-оор бичигдсэн төрлүүд бол зүгээр тайлбар биш — checkJs дор
+      # бодит шалгалт болж ажиллана. TypeScript зөвхөн ЭНД хэрэгтэй,
+      # түгээлтэнд ордоггүй.
+      - name: Төрлийн шалгалт
+        run: npx --yes typescript@5.7 tsc --noEmit -p jsconfig.json

@@ -1,38 +1,68 @@
-// storage.js — localStorage-ийн цорын ганц хаалга.
+// storage.js — аппын өгөгдлийн ЦОРЫН ГАНЦ эзэн.
+//
 // Бүх өгөгдөл НЭГ түлхүүр дор ("gym:state_v1") JSON хэлбэрээр хадгалагдана.
 // Өдрийн үр дүн цэвэр бүтэцтэй: { date, dayId, done, total, completedAt }
-// Ингэснээр дараа нь XP гүүр нэмэхэд getDayResult()-ийг л дуудахад хангалттай.
+// Ингэснээр XP гүүр нэмэхэд getDayResult()-ийг л дуудахад хангалттай.
+//
+// Хөтчийн хадгалалттай ШУУД харьцахгүй — бүх унших/бичих safe-storage.js
+// дундуур явна. Энэ файл зөвхөн БҮТЭЦ, ШИЛЖИЛТ, ТООЦООГ хариуцна.
 
 import {
   STATE_KEY,
   BACKUP_PREFIX,
   SCHEMA_VERSION,
   HISTORY_DAYS,
+  isDateString,
+  isTimestamp,
   localTimestamp,
   shiftDate
 } from './data.js';
 
-const STORAGE_BLOCKED =
-  'Тэмдэглэгээ энэ хөтөч дээр хадгалагдахгүй байна. ' +
-  'Нууц горим (private) эсвэл сайтын өгөгдөл хаалттай байж магадгүй.';
+import {
+  getStatus,
+  onStatusChange,
+  readJson,
+  writeJson,
+  writeRaw
+} from './safe-storage.js';
 
-const STORAGE_FULL =
-  'Хөтчийн хадгалах зай дүүрсэн байна. Тэмдэглэгээ хадгалагдахгүй.';
+/** @typedef {import('./types.js').AppState} AppState */
+/** @typedef {import('./types.js').DayResult} DayResult */
+/** @typedef {import('./types.js').Day} Day */
+/** @typedef {import('./types.js').Session} Session */
+/** @typedef {import('./types.js').SetMarks} SetMarks */
 
+/** Хадгалалтын төлөв -> хүнд хэлэх мессеж. */
+const STATUS_MESSAGE = {
+  ok: null,
+  blocked:
+    'Тэмдэглэгээ энэ хөтөч дээр хадгалагдахгүй байна. ' +
+    'Нууц горим (private) эсвэл сайтын өгөгдөл хаалттай байж магадгүй.',
+  full: 'Хөтчийн хадгалах зай дүүрсэн байна. Тэмдэглэгээ хадгалагдахгүй.'
+};
+
+/** @type {AppState|null} */
 let cache = null;
 
-// Хадгалалт бүтэхгүй байвал (private mode, quota дүүрсэн) энд мессеж үлдэнэ.
-// UI үүнийг уншаад хэрэглэгчид ил хэлнэ — чимээгүй алдагдах нь хамгийн муу төлөв.
-let storageError = null;
+/**
+ * Хамгийн эртний тэмдэглэгээтэй огноо. `undefined` = хараахан тооцоогүй.
+ * Түүхийн дэлгэц бүр дээр бүх түлхүүрийг эрэмбэлэхийн оронд нэг л тооцно.
+ * @type {string|null|undefined}
+ */
+let firstDateCache;
 
-// Бичилт болох бүрд мэдэгдэх сонсогчид. storage.js өөрөө хэнийг ч import хийхгүй —
+// Бичилт болох бүрд мэдэгдэх сонсогчид. storage.js өөрөө UI-г import хийхгүй —
 // холбоос нь main.js дээр хийгддэг тул мөчлөг үүсэхгүй.
+/** @type {Set<() => void>} */
 const listeners = new Set();
+
+// Хадгалалт гэнэт хаагдвал (зай дүүрэх гэх мэт) UI тэр дор нь мэдэх ёстой.
+onStatusChange(() => notify());
 
 /**
  * Бичилт бүрд дуудагдах сонсогч бүртгэнэ.
- * @param {Function} listener
- * @returns {Function} бүртгэлээс хасах функц
+ * @param {() => void} listener
+ * @returns {() => void} бүртгэлээс хасах функц
  */
 export function subscribe(listener) {
   if (typeof listener !== 'function') return () => {};
@@ -51,48 +81,33 @@ function notify() {
   }
 }
 
+/** @returns {AppState} */
 function emptyState() {
   return { version: SCHEMA_VERSION, sessions: {} };
 }
 
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, any>}
+ */
 function isPlainObject(value) {
   return !!value && typeof value === 'object' && !Array.isArray(value);
-}
-
-/** localStorage бүрэн боломжгүй байж мэднэ (private mode гэх мэт). */
-function safeRead(key) {
-  try {
-    return window.localStorage.getItem(key);
-  } catch (err) {
-    console.warn('localStorage уншиж чадсангүй:', err);
-    storageError = STORAGE_BLOCKED;
-    return null;
-  }
-}
-
-function safeWrite(key, value) {
-  try {
-    window.localStorage.setItem(key, value);
-    if (storageError) storageError = null; // дахин ажиллаж эхэлсэн бол мессежээ буцаана
-    return true;
-  } catch (err) {
-    console.warn('localStorage бичиж чадсангүй:', err);
-    storageError = err && err.name === 'QuotaExceededError' ? STORAGE_FULL : STORAGE_BLOCKED;
-    return false;
-  }
 }
 
 /**
  * Хадгалалт эвдэрсэн эсэх. Эвдэрсэн бол хүнд ойлгомжтой мессеж, эс бөгөөс null.
  * UI үүнийг мэдэгдэл болгон харуулна.
+ * @returns {string|null}
  */
 export function getStorageError() {
-  return storageError;
+  return STATUS_MESSAGE[getStatus()] ?? null;
 }
 
 /**
  * Хуучин өгөгдлийг одоогийн схем рүү шилжүүлнэ.
  * Танихгүй / эвдэрсэн өгөгдлийг УСТГАХГҮЙ, gym:backup_<v> болгож үлдээнэ.
+ * @param {unknown} raw
+ * @returns {AppState}
  */
 function migrate(raw) {
   if (!isPlainObject(raw)) return emptyState();
@@ -108,57 +123,107 @@ function migrate(raw) {
 
   // Ирээдүйн схем (шинэ хувилбарын апп ажиллаад буцаж ирсэн) — хөндөхгүй нөөцөлнө.
   if (version > SCHEMA_VERSION) {
-    safeWrite(BACKUP_PREFIX + version, JSON.stringify(raw));
+    writeJson(BACKUP_PREFIX + version, raw);
     return emptyState();
   }
 
   // Сессүүдийг цэвэрлэнэ: гэмтсэн бичлэгийг хаяна, дутууг нөхнө.
+  /** @type {Record<string, Session>} */
   const sessions = {};
   for (const [date, session] of Object.entries(state.sessions || {})) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !isPlainObject(session)) continue;
+    if (!isDateString(date) || !isPlainObject(session)) continue;
     sessions[date] = normalizeSession(date, session);
   }
 
   return { version: SCHEMA_VERSION, sessions };
 }
 
+/**
+ * Нэг сессийг найдвартай бүтэц рүү оруулна.
+ * @param {string} date
+ * @param {any} session
+ * @returns {Session}
+ */
 function normalizeSession(date, session) {
+  /** @type {SetMarks} */
   const sets = {};
   if (isPlainObject(session.sets)) {
     for (const [exerciseId, marks] of Object.entries(session.sets)) {
       if (Array.isArray(marks)) sets[exerciseId] = marks.map(Boolean);
     }
   }
+
+  const total = Math.max(0, Math.round(Number(session.total) || 0));
+  // done нь total-оос ХЭЗЭЭ Ч хэтрэхгүй — эвдэрсэн өгөгдөл "8/7 дасгал"
+  // гэсэн утгагүй хураангуй үүсгэхээс сэргийлнэ.
+  const done = Math.min(Math.max(0, Math.round(Number(session.done) || 0)), total);
+
   return {
     date,
     dayId: typeof session.dayId === 'string' ? session.dayId : '',
-    done: Number(session.done) || 0,
-    total: Number(session.total) || 0,
-    completedAt: typeof session.completedAt === 'string' ? session.completedAt : null,
+    done,
+    total,
+    completedAt: isTimestamp(session.completedAt) ? session.completedAt : null,
     sets
   };
 }
 
-/** State-ийг ачаална (санах ойд кэшлэнэ). */
-export function loadState() {
-  if (cache) return cache;
-  const raw = safeRead(STATE_KEY);
-  let parsed = null;
-  if (raw) {
-    try {
-      parsed = JSON.parse(raw);
-    } catch (err) {
-      console.warn('Хадгалсан өгөгдөл эвдэрсэн байна, нөөцөлж байна:', err);
-      safeWrite(BACKUP_PREFIX + 'corrupt', raw);
+/**
+ * Хоёр сесс агуулгаараа ижил үү.
+ * Урьд нь энд JSON.stringify-ийн харьцуулалт хийгддэг байсан бол тэр нь
+ * ТҮЛХҮҮРИЙН ДАРААЛЛААС хамаардаг — агуулга нь огт өөрчлөгдөөгүй байхад
+ * "өөрчлөгдсөн" гэж үзээд дэмий бичилт хийдэг байв.
+ * @param {Session} a
+ * @param {Session} b
+ * @returns {boolean}
+ */
+function sessionsEqual(a, b) {
+  if (a.dayId !== b.dayId) return false;
+  if (a.done !== b.done || a.total !== b.total) return false;
+  if (a.completedAt !== b.completedAt) return false;
+
+  const keysA = Object.keys(a.sets);
+  const keysB = Object.keys(b.sets);
+  if (keysA.length !== keysB.length) return false;
+
+  for (const key of keysA) {
+    const left = a.sets[key];
+    const right = b.sets[key];
+    if (!right || left.length !== right.length) return false;
+    for (let i = 0; i < left.length; i += 1) {
+      if (left[i] !== right[i]) return false;
     }
   }
-  cache = migrate(parsed);
+  return true;
+}
+
+/**
+ * State-ийг ачаална (санах ойд кэшлэнэ).
+ * @returns {AppState}
+ */
+export function loadState() {
+  if (cache) return cache;
+
+  const stored = readJson(STATE_KEY);
+  if (stored && stored.value === null) {
+    // JSON нь эвдэрсэн байна. Дарж бичихээс өмнө хуулбарыг нь үлдээнэ —
+    // хэрэглэгчийн хэдэн сарын түүхийг чимээгүй хаях эрх бидэнд байхгүй.
+    console.warn('Хадгалсан өгөгдөл эвдэрсэн байна, нөөцөлж байна.');
+    writeRaw(BACKUP_PREFIX + 'corrupt', stored.raw);
+  }
+
+  cache = migrate(stored ? stored.value : null);
+  firstDateCache = undefined;
   return cache;
 }
 
-// saveDay / clearDay / clearAll / reconcile-ийн БИЧИХ цорын ганц цэг.
+/**
+ * saveDay / clearDay / clearAll / reconcile-ийн БИЧИХ цорын ганц цэг.
+ * @returns {boolean}
+ */
 function persist() {
-  const ok = safeWrite(STATE_KEY, JSON.stringify(cache));
+  firstDateCache = undefined;
+  const ok = writeJson(STATE_KEY, cache);
   notify();
   return ok;
 }
@@ -168,20 +233,32 @@ function persist() {
  * Ижил апп өөр табд нээлттэй байхад ("storage" event) хэрэгтэй —
  * үгүй бол нэг таб дээр тэмдэглэсэн зүйл нөгөө дээр нь харагдахгүй, улмаар
  * тэр таб хуучин төлөвөө дарж бичих эрсдэлтэй.
+ * @returns {AppState}
  */
 export function reload() {
   cache = null;
-  return loadState();
+  firstDateCache = undefined;
+  const state = loadState();
+  // Дахин уншсан нь БИЧИЛТТЭЙ адил үр дагавартай: өөр таб дээр тэмдэглэсэн
+  // өгөгдөл орж ирсэн байна. Сонсогчид (тооцооны кэш, feed, мэдэгдэл) энэ
+  // тухай мэдэхгүй бол хуучин утгаа хадгалсаар үлдэнэ.
+  notify();
+  return state;
 }
 
-/** Тухайн өдрийн сессийг буцаана (байхгүй бол null). */
+/**
+ * Тухайн өдрийн сессийг буцаана (байхгүй бол null).
+ * @param {string} date
+ * @returns {Session|null}
+ */
 export function getSession(date) {
   return loadState().sessions[date] || null;
 }
 
 /**
- * Гадагш гарах ЦЭВЭР үр дүн. XP гүүр ирээдүйд яг үүнийг ашиглана.
- * @returns {{date:string, dayId:string, done:number, total:number, completedAt:string|null}|null}
+ * Гадагш гарах ЦЭВЭР үр дүн. XP гүүр яг үүнийг ашиглана.
+ * @param {string} date
+ * @returns {DayResult|null}
  */
 export function getDayResult(date) {
   const session = getSession(date);
@@ -193,40 +270,74 @@ export function getDayResult(date) {
 /**
  * Хамгийн эртний тэмдэглэгээтэй огноо ("YYYY-MM-DD"), огт байхгүй бол null.
  * Түүхийн дэлгэц үүнээс өмнөх хоосон өдрүүдийг "хийгээгүй" гэж тоолохгүй.
+ * @returns {string|null}
  */
 export function firstSessionDate() {
-  const dates = Object.keys(loadState().sessions);
-  if (dates.length === 0) return null;
-  return dates.sort()[0];
+  if (firstDateCache !== undefined) return firstDateCache;
+
+  // Эрэмбэлэхийн оронд нэг удаагийн шүүлт — O(n log n) биш O(n).
+  let earliest = null;
+  for (const date of Object.keys(loadState().sessions)) {
+    if (earliest === null || date < earliest) earliest = date;
+  }
+  firstDateCache = earliest;
+  return earliest;
 }
 
-/** Тухайн өдрийн сет тэмдэглэгээ: { exerciseId: [true, false, ...] } */
+/**
+ * Тухайн өдрийн сет тэмдэглэгээ: { exerciseId: [true, false, ...] }
+ *
+ * ХУУЛБАР буцаана. Дотоод кэш рүү шууд лавлагаа өгвөл дуудагч тал санамсаргүй
+ * өөрчлөөд, persist() дуудагдалгүй өнгөрч, дэлгэц ба хадгалалт зөрөх эрсдэлтэй.
+ * @param {string} date
+ * @returns {SetMarks}
+ */
 export function getDaySets(date) {
   const session = getSession(date);
-  return session ? session.sets : {};
+  if (!session) return {};
+  /** @type {SetMarks} */
+  const copy = {};
+  for (const [exerciseId, marks] of Object.entries(session.sets)) {
+    copy[exerciseId] = marks.slice();
+  }
+  return copy;
 }
 
 /**
  * Өдрийн бүх мэдээллийг бичнэ.
  * completedAt нь өдөр анх бүрэн дуусах агшинд л тавигдана.
+ * @param {{date: string, dayId: string, sets: SetMarks, done: number, total: number}} input
+ * @returns {DayResult|null}
  */
 export function saveDay({ date, dayId, sets, done, total }) {
+  if (!isDateString(date)) {
+    console.warn(`saveDay: огноо танигдсангүй (${String(date)}) — бичихээс татгалзлаа.`);
+    return null;
+  }
+
   const state = loadState();
   const previous = state.sessions[date] || null;
-  const isComplete = total > 0 && done >= total;
+  const safeTotal = Math.max(0, Math.round(Number(total) || 0));
+  const safeDone = Math.min(Math.max(0, Math.round(Number(done) || 0)), safeTotal);
+  const isComplete = safeTotal > 0 && safeDone >= safeTotal;
 
   let completedAt = previous ? previous.completedAt : null;
   if (isComplete && !completedAt) completedAt = localTimestamp();
   if (!isComplete) completedAt = null;
 
-  state.sessions[date] = normalizeSession(date, {
+  const next = normalizeSession(date, {
     dayId,
-    done,
-    total,
+    done: safeDone,
+    total: safeTotal,
     completedAt,
     sets
   });
 
+  // Агуулга нь өөрчлөгдөөгүй бол бичихгүй — тэмдэглээд буцаагаад тайлах гэх
+  // мэт үйлдэл дээр localStorage-д дэмий ачаалал өгөхгүй.
+  if (previous && sessionsEqual(previous, next)) return getDayResult(date);
+
+  state.sessions[date] = next;
   persist();
   return getDayResult(date);
 }
@@ -242,7 +353,7 @@ export function saveDay({ date, dayId, sets, done, total }) {
  * - done / total / completedAt-ыг дахин тооцно.
  * - Ганц ч сет тэмдэглэгдээгүй үлдвэл бичлэгийг бүхэлд нь устгана.
  *
- * @param {Array} days program.js-ийн getDays() буцаадаг өдрүүд
+ * @param {Day[]} days program.js-ийн getDays() буцаадаг өдрүүд
  * @returns {{removed: number, trimmed: number}} юу цэвэрлэснийг мэдээлнэ
  */
 export function reconcile(days) {
@@ -252,6 +363,8 @@ export function reconcile(days) {
   let removed = 0;
   let trimmed = 0;
 
+  // Object.entries нь хормын хуулбар үүсгэдэг тул давталтын дотор delete
+  // хийх нь аюулгүй.
   for (const [date, session] of Object.entries(state.sessions)) {
     const day = byId.get(session.dayId);
 
@@ -262,6 +375,7 @@ export function reconcile(days) {
       continue;
     }
 
+    /** @type {SetMarks} */
     const sets = {};
     let done = 0;
     let anyMark = false;
@@ -288,7 +402,7 @@ export function reconcile(days) {
     const completedAt = isComplete ? (session.completedAt || localTimestamp()) : null;
 
     const next = normalizeSession(date, { dayId: day.id, done, total, completedAt, sets });
-    if (JSON.stringify(next) !== JSON.stringify(session)) {
+    if (!sessionsEqual(next, session)) {
       state.sessions[date] = next;
       trimmed += 1;
     }
@@ -304,7 +418,10 @@ export function clearAll() {
   persist();
 }
 
-/** Тухайн өдрийн тэмдэглэгээг бүрэн арилгана. */
+/**
+ * Тухайн өдрийн тэмдэглэгээг бүрэн арилгана.
+ * @param {string} date
+ */
 export function clearDay(date) {
   const state = loadState();
   if (state.sessions[date]) {
@@ -316,13 +433,25 @@ export function clearDay(date) {
 /**
  * Сүүлийн N өдрийн үр дүн, шинэээс нь хуучин рүү.
  * Тэмдэглэгээгүй өдөр null-аар биш, { date, result: null } хэлбэрээр ирнэ.
+ * @param {string} endDate
+ * @param {number} [count]
+ * @returns {Array<{date: string, result: DayResult|null}>}
  */
 export function getRecentDays(endDate, count = HISTORY_DAYS) {
   const list = [];
-  for (let i = 0; i < count; i += 1) {
+  const span = Math.max(0, Math.round(Number(count) || 0));
+  for (let i = 0; i < span; i += 1) {
     const date = shiftDate(endDate, -i);
     list.push({ date, result: getDayResult(date) });
   }
   return list;
 }
 
+/**
+ * Тестэд зориулж дотоод кэшийг тэглэнэ.
+ * Аппын ажиллагаанд дуудагдахгүй.
+ */
+export function __resetForTests() {
+  cache = null;
+  firstDateCache = undefined;
+}
