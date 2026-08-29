@@ -54,6 +54,45 @@
   }
 }
 
+/* --- Шинэ хувилбарын зурвас ---
+   Алдаа биш, тиймээс улаан биш. Дарж болохыг нь харуулахын тулд акцент
+   зааг + бүтэн өргөнтэй товч. Байхгүй үедээ огт зай эзлэхгүй. */
+
+.update {
+  margin: var(--s4) var(--pad-x) 0;
+}
+
+.update[hidden] {
+  display: none;
+}
+
+.update__button {
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--s3) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent);
+  border-radius: var(--r1);
+  color: var(--fg);
+  font-size: var(--t-12);
+  font-weight: 600;
+  text-align: left;
+  animation: block-in var(--t-open) var(--ease);
+  transition: background-color var(--t-tap) var(--ease);
+}
+
+.update__button:active {
+  background-color: var(--bg-3);
+}
+
+@media (min-width: 481px) {
+  .update {
+    max-width: calc(var(--max-w) - var(--pad-x) * 2);
+    margin-inline: auto;
+  }
+}
+
 /* --- Толгой хэсэг: хөтөлбөрийн нэр, огноо, доор нь өдрийн нэр том тод --- */
 
 .head {

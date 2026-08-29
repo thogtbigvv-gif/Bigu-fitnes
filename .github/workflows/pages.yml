@@ -35,12 +35,20 @@ jobs:
       - name: Тест
         run: npm test
 
+      # Кэшийн нэр commit бүрд шинэ болно. Ингэснээр deploy хийхэд
+      # хуучин, шинэ файлууд ХЭЗЭЭ Ч холилдохгүй, хэрэглэгч гар утсан дээрээ
+      # хуучин хувилбар дээр гацахгүй (дэлгэрэнгүйг sw.js дотор).
+      - name: Service worker-т хувилбар тавих
+        run: |
+          sed -i "s|^const BUILD = '__BUILD__';$|const BUILD = '${GITHUB_SHA}';|" sw.js
+          grep -q "^const BUILD = '${GITHUB_SHA}';$" sw.js
+
       - name: Configure Pages
         uses: actions/configure-pages@v5
 
       # Хөгжүүлэлтийн файлууд сайт дээр гарах шаардлагагүй.
       - name: Хөгжүүлэлтийн файлуудыг хасах
-        run: rm -rf tests node_modules jsconfig.json package.json package-lock.json
+        run: rm -rf tests tools node_modules jsconfig.json package.json package-lock.json
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

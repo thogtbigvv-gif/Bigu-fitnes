@@ -7,6 +7,13 @@
   <meta name="description" content="Өдөр тутмын дасгалын төлөвлөгөө тэмдэглэгч">
   <title>Дасгалын тэмдэглэл</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='rgb(11,11,12)'/%3E%3Cpath d='M9 16.5l5 5 9-10' stroke='rgb(222,222,227)' stroke-width='3.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <!-- Утсанд суулгах ба офлайн ажиллагаа. Бүх зам харьцангуй тул дэд
+       замд (жишээ нь /Bigu-fitness/) байрлуулсан ч ажиллана. -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Дасгал">
   <link rel="stylesheet" href="./css/base.css">
   <link rel="stylesheet" href="./css/layout.css">
   <link rel="stylesheet" href="./css/components.css">
@@ -15,6 +22,9 @@
   <div class="app">
     <!-- Хадгалалт бүтэхгүй байвал (нууц горим, зай дүүрсэн) энд мессеж гарна. -->
     <div class="notice" id="notice" role="status" hidden></div>
+
+    <!-- Шинэ хувилбар кэшэнд бэлэн болоход энд зурвас гарна (js/updates.js). -->
+    <div class="update" id="update" role="status" hidden></div>
 
     <main class="app-main" id="app-main">
       <section class="screen" id="screen-today" role="tabpanel" aria-labelledby="tab-today" tabindex="0"></section>
