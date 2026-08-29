@@ -407,6 +407,172 @@
   color: var(--accent);
 }
 
+/* ---------- Өдөр солих ----------
+   Хоёрдогч үйлдэл: дэлгэцийн гол хэмнэлийг эвдэхгүй, зөвхөн хэрэгтэй үед
+   нүдэнд орох ёстой. Тиймээс дэвсгэргүй, зөвхөн зааг. */
+
+.swap {
+  margin-bottom: var(--s6);
+}
+
+.swap-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--s4);
+  background-color: transparent;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r1);
+  color: var(--fg-2);
+  font-size: var(--t-14);
+  font-weight: 600;
+  text-align: left;
+  transition: background-color var(--t-tap) var(--ease),
+              color var(--t-tap) var(--ease);
+}
+
+.swap-toggle:active {
+  background-color: var(--bg-2);
+  color: var(--fg);
+}
+
+.swap-toggle__icon {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--fg-3);
+}
+
+.swap-toggle__text {
+  flex: 1 1 auto;
+}
+
+.swap-toggle__chevron {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--fg-3);
+  transition: transform var(--t-open) var(--ease);
+}
+
+.swap-toggle.is-open {
+  border-style: solid;
+  color: var(--fg);
+}
+
+.swap-toggle.is-open .swap-toggle__chevron {
+  transform: rotate(180deg);
+}
+
+.swap__panel {
+  margin-top: var(--s3);
+  animation: block-in var(--t-open) var(--ease);
+}
+
+.swap__panel .hint {
+  margin: 0 0 var(--s3);
+}
+
+.swapopt {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--s2) var(--s3);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  color: var(--fg);
+  text-align: left;
+  transition: background-color var(--t-tap) var(--ease);
+}
+
+.swapopt:active {
+  background-color: var(--bg-3);
+}
+
+.swapopt[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Амралтын өдөр бол цаана нь байх хэмнэл — жагсаалтад ялгарч харагдана. */
+.swapopt.is-rest .swapopt__title {
+  color: var(--fg-2);
+}
+
+.swapopt__wd {
+  flex: 0 0 auto;
+  min-width: 24px;
+  color: var(--fg-3);
+}
+
+.swapopt__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.swapopt__title {
+  font-size: var(--t-14);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swapopt__meta {
+  font-size: var(--t-12);
+  color: var(--fg-3);
+}
+
+/* Солигдсоныг мэдэгдэх зурвас — алдаа биш тул улаан биш, акцент зааг. */
+.swapped {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+  padding: var(--s3) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: var(--r1);
+}
+
+.swapped__icon {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--fg-3);
+}
+
+.swapped__text {
+  flex: 1 1 auto;
+  font-size: var(--t-12);
+  color: var(--fg-2);
+}
+
+.swapped__undo {
+  flex: 0 0 auto;
+  min-height: var(--touch);
+  padding: 0 var(--s2);
+  font-size: var(--t-12);
+  font-weight: 600;
+  color: var(--fg-3);
+}
+
+.swapped__undo:active {
+  color: var(--fg);
+}
+
+/* Долоо хоног / түүхийн мөрөн дээрх солилцооны тэмдэг */
+.row-day__swap {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--fg-3);
+}
+
 /* ---------- Долоо хоногийн сетийн хэмжүүр ---------- */
 
 .meter {

@@ -50,6 +50,7 @@ const PRECACHE = [
   './js/safe-storage.js',
   './js/storage.js',
   './js/program.js',
+  './js/schedule.js',
   './js/stats.js',
   './js/timer.js',
   './js/bridge.js',

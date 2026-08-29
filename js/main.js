@@ -6,6 +6,7 @@
 import { STATE_KEY, msUntilMidnight, todayString } from './data.js';
 import { flushBridge, publishBridge, schedulePublish } from './bridge.js';
 import { loadProgram, getDays } from './program.js';
+import { dayForDate } from './schedule.js';
 import { loadState, reconcile, reload, subscribe } from './storage.js';
 import { checkForUpdate, registerServiceWorker } from './updates.js';
 import * as timer from './timer.js';
@@ -118,7 +119,10 @@ async function start() {
   }
 
   try {
-    reconcile(getDays());      // хөтөлбөртэй таарахаа больсон хуучин тэмдэглэгээг цэгцлэх
+    // Хөтөлбөртэй таарахаа больсон хуучин тэмдэглэгээг цэгцлэх. Өдөр
+    // солилцоог тооцсон зураглалыг дамжуулна — эс бөгөөс зөөгдсөн өдрийн
+    // тэмдэглэгээ хуучин төлөвлөгөөндөө наалдаж үлдэнэ.
+    reconcile(getDays(), dayForDate);
 
     // Гадагш чиглэсэн feed: тэмдэглэгээ бичигдэх бүрд gym:bridge шинэчлэгдэнэ.
     // Дараалсан тэмдэглэгээ бүрд биш, тэдгээрийн төгсгөлд нэг удаа бичигдэнэ.

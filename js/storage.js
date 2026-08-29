@@ -12,10 +12,12 @@ import {
   BACKUP_PREFIX,
   SCHEMA_VERSION,
   HISTORY_DAYS,
+  STREAK_LOOKBACK_DAYS,
   isDateString,
   isTimestamp,
   localTimestamp,
-  shiftDate
+  shiftDate,
+  todayString
 } from './data.js';
 
 import {
@@ -31,6 +33,7 @@ import {
 /** @typedef {import('./types.js').Day} Day */
 /** @typedef {import('./types.js').Session} Session */
 /** @typedef {import('./types.js').SetMarks} SetMarks */
+/** @typedef {import('./types.js').Swaps} Swaps */
 
 /** Хадгалалтын төлөв -> хүнд хэлэх мессеж. */
 const STATUS_MESSAGE = {
@@ -83,7 +86,7 @@ function notify() {
 
 /** @returns {AppState} */
 function emptyState() {
-  return { version: SCHEMA_VERSION, sessions: {} };
+  return { version: SCHEMA_VERSION, sessions: {}, swaps: {} };
 }
 
 /**
@@ -121,6 +124,13 @@ function migrate(raw) {
     version = 1;
   }
 
+  // v1 -> v2: өдөр солилцоо нэмэгдэв. Хуучин өгөгдөлд солилцоо байгаагүй тул
+  // хоосон зураглалаар эхэлнэ — тэмдэглэгээнд нь хуруу хүрэхгүй.
+  if (version < 2) {
+    state = { ...state, version: 2, swaps: {} };
+    version = 2;
+  }
+
   // Ирээдүйн схем (шинэ хувилбарын апп ажиллаад буцаж ирсэн) — хөндөхгүй нөөцөлнө.
   if (version > SCHEMA_VERSION) {
     writeJson(BACKUP_PREFIX + version, raw);
@@ -135,7 +145,32 @@ function migrate(raw) {
     sessions[date] = normalizeSession(date, session);
   }
 
-  return { version: SCHEMA_VERSION, sessions };
+  return { version: SCHEMA_VERSION, sessions, swaps: normalizeSwaps(state.swaps) };
+}
+
+/**
+ * Солилцоог найдвартай бүтэц рүү оруулна.
+ *
+ * Цорын ганц дүрэм: солилцоо ҮРГЭЛЖ ХАРИЛЦАН. `swaps[a] === b` бол
+ * `swaps[b] === a` байх ёстой. Хагас холбоос (нэг тал нь өөр өдөр рүү
+ * заасан) үлдвэл хоёр огноо ижил төлөвлөгөө харуулах эсвэл нэг өдөр
+ * бүрмөсөн алга болох эрсдэлтэй — тиймээс эргэлзээтэй бүхнийг хаяна.
+ * @param {unknown} raw
+ * @returns {Swaps}
+ */
+function normalizeSwaps(raw) {
+  /** @type {Swaps} */
+  const swaps = {};
+  if (!isPlainObject(raw)) return swaps;
+
+  for (const [date, partner] of Object.entries(raw)) {
+    if (!isDateString(date) || !isDateString(partner) || date === partner) continue;
+    // Хос нь харилцан байж, аль нэг нь өөр гуравдагч өдөр рүү заагаагүй
+    // байх ёстой.
+    if (raw[partner] !== date) continue;
+    swaps[date] = partner;
+  }
+  return swaps;
 }
 
 /**
@@ -342,6 +377,77 @@ export function saveDay({ date, dayId, sets, done, total }) {
   return getDayResult(date);
 }
 
+/* ---------------- Өдөр солилцоо ---------------- */
+
+/**
+ * Тухайн өдөр аль өдрийн төлөвлөгөөг хийх вэ. Солилцоогүй бол null.
+ * @param {string} date
+ * @returns {string|null}
+ */
+export function getSwapPartner(date) {
+  return loadState().swaps[date] || null;
+}
+
+/**
+ * Бүх солилцоо (хуулбар).
+ * @returns {Swaps}
+ */
+export function getSwaps() {
+  return { ...loadState().swaps };
+}
+
+/**
+ * Хоёр өдрийн төлөвлөгөөг харилцан солино.
+ *
+ * Аль нэг өдөр нь өмнө нь өөр өдөртэй солигдсон байвал тэр хуучин холбоо
+ * ЭХЛЭЭД тайлагдана — эс бөгөөс хагас холбоос үлдэж, гуравдагч өдөр
+ * "хосгүй" болно.
+ * @param {string} a
+ * @param {string} b
+ * @returns {boolean} бичигдсэн эсэх
+ */
+export function setSwapPair(a, b) {
+  if (!isDateString(a) || !isDateString(b) || a === b) {
+    console.warn(`setSwapPair: огноо танигдсангүй (${String(a)}, ${String(b)}).`);
+    return false;
+  }
+
+  const state = loadState();
+  if (state.swaps[a] === b) return false; // аль хэдийн ийм байна
+
+  unlink(state.swaps, a);
+  unlink(state.swaps, b);
+  state.swaps[a] = b;
+  state.swaps[b] = a;
+  persist();
+  return true;
+}
+
+/**
+ * Тухайн өдрийн солилцоог тайлна (хосыг нь мөн).
+ * @param {string} date
+ * @returns {boolean} өөрчлөгдсөн эсэх
+ */
+export function clearSwap(date) {
+  const state = loadState();
+  if (!state.swaps[date]) return false;
+  unlink(state.swaps, date);
+  persist();
+  return true;
+}
+
+/**
+ * Нэг өдрийг хосоос нь салгана (хоёр талын бичлэгийг зэрэг устгана).
+ * @param {Swaps} swaps
+ * @param {string} date
+ */
+function unlink(swaps, date) {
+  const partner = swaps[date];
+  if (!partner) return;
+  delete swaps[partner];
+  delete swaps[date];
+}
+
 /**
  * Хөтөлбөр солигдоход хуучин тэмдэглэгээг цэгцэлнэ.
  * main.js дотор program.json ачаалагдсаны дараа нэг удаа дуудагдана.
@@ -352,21 +458,28 @@ export function saveDay({ date, dayId, sets, done, total }) {
  * - Сетийн тоо өөрчлөгдсөн бол уртыг нь тааруулна.
  * - done / total / completedAt-ыг дахин тооцно.
  * - Ганц ч сет тэмдэглэгдээгүй үлдвэл бичлэгийг бүхэлд нь устгана.
+ * - Хугацаа нь өнгөрсөн, хэнд ч хэрэггүй болсон солилцоог хаяна.
  *
  * @param {Day[]} days program.js-ийн getDays() буцаадаг өдрүүд
+ * @param {((date: string) => Day|null)} [resolveDay]
+ *   Огноо -> тэр өдөр ХИЙГДЭХ өдөр. Солилцоог тооцсон хувилбарыг
+ *   (schedule.dayForDate) main.js дамжуулна. Өгөгдөөгүй бол сесс дотор
+ *   хадгалагдсан dayId-гаар шийднэ — тест ба хуучин зан төлөв.
  * @returns {{removed: number, trimmed: number}} юу цэвэрлэснийг мэдээлнэ
  */
-export function reconcile(days) {
+export function reconcile(days, resolveDay) {
   const state = loadState();
   const byId = new Map((days || []).map((day) => [day.id, day]));
 
-  let removed = 0;
+  let removed = pruneSwaps(state.swaps);
   let trimmed = 0;
 
   // Object.entries нь хормын хуулбар үүсгэдэг тул давталтын дотор delete
   // хийх нь аюулгүй.
   for (const [date, session] of Object.entries(state.sessions)) {
-    const day = byId.get(session.dayId);
+    // Өдөр солигдсон бол тэмдэглэгээг ШИНЭ төлөвлөгөөтэй нь тулгана —
+    // эс бөгөөс дэлгэц нэг өдрийг, түүх өөр өдрийг харуулна.
+    const day = resolveDay ? resolveDay(date) : byId.get(session.dayId);
 
     // Өдөр нь алга болсон эсвэл амралт болсон -> хадгалах утгагүй.
     if (!day || day.isRest) {
@@ -410,6 +523,29 @@ export function reconcile(days) {
 
   if (removed || trimmed) persist();
   return { removed, trimmed };
+}
+
+/**
+ * Хэтэрхий хуучирсан солилцоог хаяна.
+ *
+ * Солилцоо нь ердөө "энэ долоо хоногт өдрөө сольсон" гэсэн бичлэг. Жилийн
+ * өмнөх солилцоог хадгалж байх нь ямар ч дэлгэцэд харагдахгүй, зөвхөн
+ * хадгалалт дүүргэнэ. Хос нь ХОЁУЛАА хуучирсан үед л устгана — эс бөгөөс
+ * хагас холбоос үлдэнэ.
+ * @param {Swaps} swaps
+ * @returns {number} устгасан хосын тоо
+ */
+function pruneSwaps(swaps) {
+  const cutoff = shiftDate(todayString(), -STREAK_LOOKBACK_DAYS);
+  let removed = 0;
+
+  for (const [date, partner] of Object.entries(swaps)) {
+    if (!swaps[date]) continue; // хосоороо аль хэдийн устсан
+    if (date >= cutoff || partner >= cutoff) continue;
+    unlink(swaps, date);
+    removed += 1;
+  }
+  return removed;
 }
 
 /** Энэ төхөөрөмж дээрх БҮХ тэмдэглэгээг устгана. Буцаах боломжгүй. */

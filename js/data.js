@@ -6,7 +6,10 @@
 // `a < b` гэсэн энгийн харьцуулалт зөв ажиллана.
 
 export const NAMESPACE = 'gym:';
-export const SCHEMA_VERSION = 1;
+
+// v2: төлөвт `swaps` (өдөр солилцоо) нэмэгдсэн. Хуучин v1 өгөгдөл
+// migrate() дундуур бүтнээрээ шилжинэ — нэг ч тэмдэглэгээ алдагдахгүй.
+export const SCHEMA_VERSION = 2;
 export const STATE_KEY = NAMESPACE + 'state_v1';
 export const BACKUP_PREFIX = NAMESPACE + 'backup_';
 

@@ -17,7 +17,7 @@ import {
   todayString
 } from './data.js';
 
-import { getDayForDate } from './program.js';
+import { dayForDate } from './schedule.js';
 import { firstSessionDate, getDaySets, subscribe } from './storage.js';
 
 /** @typedef {import('./types.js').Day} Day */
@@ -142,7 +142,7 @@ export function dayStatus(date) {
  * @returns {DayStatus}
  */
 function computeDayStatus(date) {
-  const day = getDayForDate(date);
+  const day = dayForDate(date);
   if (!day) return { key: 'none', day: null, done: 0, total: 0, setsDone: 0, setsTotal: 0 };
   if (day.isRest) return { key: 'rest', day, done: 0, total: 0, setsDone: 0, setsTotal: 0 };
 
@@ -194,7 +194,7 @@ export function describeStatus(status) {
 export function nextTrainingDay(fromDate) {
   for (let i = 1; i <= WEEK_DAYS; i += 1) {
     const date = shiftDate(fromDate, i);
-    const day = getDayForDate(date);
+    const day = dayForDate(date);
     if (day && !day.isRest) return { date, day };
   }
   return null;
