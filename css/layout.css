@@ -78,6 +78,7 @@
   font-size: var(--t-12);
   font-weight: 600;
   text-align: left;
+  box-shadow: var(--edge);
   animation: block-in var(--t-open) var(--ease);
   transition: background-color var(--t-tap) var(--ease);
 }
@@ -184,9 +185,20 @@
   bottom: 0;
   z-index: 10;
   display: flex;
-  background-color: var(--bg-1);
+  /* Агуулга доогуур нь гүйхэд бүрэн битүү хавтан байснаас, бага зэрэг
+     нэвт харагдах давхарга нь "энэ бол дээрх давхарга" гэдгийг мэдрүүлнэ.
+     Дэмжигдэхгүй хөтөч дээр доорх @supports бүрэн дүүргэлт рүү буцаана. */
+  background-color: rgba(11, 11, 12, 0.86);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border-top: 1px solid var(--line);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tabbar {
+    background-color: var(--bg-1);
+  }
 }
 
 /* Идэвхтэй табын 2px заагч — табаас таб руу гүйнэ */

@@ -22,6 +22,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   color: var(--fg-2);
+  box-shadow: var(--edge);
   transition: background-color var(--t-tap) var(--ease),
               transform var(--t-tap) var(--ease);
 }
@@ -43,6 +44,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   color: var(--fg);
+  box-shadow: var(--edge);
   font-size: var(--t-14);
   font-weight: 600;
   transition: background-color var(--t-tap) var(--ease);
@@ -64,6 +66,7 @@
   font-size: var(--t-12);
   line-height: 1.4;
   color: var(--fg-2);
+  box-shadow: var(--edge);
 }
 
 /* ---------- Progress: шугаман, 4px, бүтэн өргөн ---------- */
@@ -101,6 +104,8 @@
 .progress__fill {
   height: 100%;
   width: 0;
+  /* Урсаж яваа үзүүр нь зөөлөн — тасарсан мэт биш, үргэлжилж байгаа мэт. */
+  border-radius: 0 2px 2px 0;
   background-color: var(--accent);
   transition: width var(--t-bar) var(--ease);
 }
@@ -115,6 +120,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r2);
   overflow: hidden;
+  box-shadow: var(--edge);
 }
 
 /* Зүүн тал: сетийн тэмдэглэгээ (нэг дараад бүх сетийг тэмдэглэнэ) */
@@ -256,7 +262,7 @@
 }
 
 .row-ex.is-done .row-ex__body {
-  opacity: 0.45;
+  opacity: 0.52;
 }
 
 .row-ex.is-done .row-ex__name {
@@ -415,6 +421,11 @@
   margin-bottom: var(--s6);
 }
 
+/* Тайлбар нь хэсгийн ГАНЦ агуулга болох үед доод зай нь давхарлана. */
+.swap .note:last-child {
+  margin-bottom: 0;
+}
+
 .swap-toggle {
   display: flex;
   align-items: center;
@@ -485,6 +496,7 @@
   border-radius: var(--r1);
   color: var(--fg);
   text-align: left;
+  box-shadow: var(--edge);
   transition: background-color var(--t-tap) var(--ease);
 }
 
@@ -539,6 +551,7 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--accent-dim);
   border-radius: var(--r1);
+  box-shadow: var(--edge);
 }
 
 .swapped__icon {
@@ -599,6 +612,7 @@
 
 .meter__fill {
   height: 100%;
+  border-radius: 0 2px 2px 0;
   background-color: var(--fg-2);
   transition: width var(--t-bar) var(--ease);
 }
@@ -612,6 +626,7 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--fg);
   border-radius: var(--r1);
+  box-shadow: var(--edge);
 }
 
 @keyframes block-in {
@@ -679,6 +694,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   text-align: left;
+  box-shadow: var(--edge);
   transition: background-color var(--t-tap) var(--ease),
               transform var(--t-tap) var(--ease);
 }
@@ -691,15 +707,18 @@
 .row-day.is-today {
   border-color: var(--line-strong);
   background-color: var(--bg-3);
+  /* Зүүн ирмэгийн 2px зурвас — 7 мөрийн дундаас өнөөдрийг нэг харцаар
+     олох боломж. Шинэ өнгө биш, байгаа акцентын бүдэг хувилбар. */
+  box-shadow: var(--edge), inset 2px 0 0 var(--accent-dim);
 }
 
 .row-day.is-idle {
-  opacity: 0.55;
+  opacity: 0.72;
 }
 
 /* Амралт бол алдаа ч биш, амжилт ч биш — хэмнэлийн цаад давхарга. */
 .row-day.is-quiet {
-  opacity: 0.45;
+  opacity: 0.62;
 }
 
 .row-day__wd {
@@ -775,14 +794,20 @@
 .row-day__state {
   flex: 0 0 auto;
   font-size: var(--t-12);
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  /* 600 жин дээр "ХИЙГЭЭГҮЙ" гэсэн үг долоо хоногийн жагсаалт дээр дараалан
+     давтагдаж, дасгалын НЭРтэй өрсөлдөж эхэлдэг байв. Төлөв нь хоёрдогч
+     мэдээлэл — жинг нь нэг шат буулгаснаар мөр нь эхлээд "юу" гэдгээ,
+     дараа нь "яасан" гэдгээ хэлдэг боллоо. */
+  font-weight: 500;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--fg-3);
   white-space: nowrap;
 }
 
+/* Биелсэн өдөр бол ганц үнэхээр сайн мэдээ — тэр л тодорч харагдана. */
 .row-day__state.is-done {
+  font-weight: 600;
   color: var(--fg);
 }
 
@@ -801,6 +826,7 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--fg-3);
   border-radius: var(--r1);
+  box-shadow: var(--edge);
 }
 
 .streak__main {
@@ -833,6 +859,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   overflow: hidden;
+  box-shadow: var(--edge);
 }
 
 .stat {
@@ -842,9 +869,10 @@
 }
 
 .stat__value {
-  font-size: var(--t-20);
+  font-size: var(--t-28);
   font-weight: 700;
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .stat__label {
@@ -865,6 +893,7 @@
   color: var(--danger);
   font-size: var(--t-14);
   font-weight: 600;
+  box-shadow: var(--edge);
 }
 
 .danger:active {
@@ -906,4 +935,36 @@
   border-radius: var(--r1);
   font-size: var(--t-14);
   color: var(--fg-2);
+}
+
+/* ---------- Хулганатай төхөөрөмж ----------
+   Апп нь утсанд зориулагдсан тул бүх хариу нь :active дээр баригдсан байв.
+   Хөтөч дээр (эсвэл таблет + хулгана) дарахаас өмнө "энэ дарагдана" гэдэг нь
+   мэдэгдэхгүй байсан. `hover: hover` шалгуур нь мэдрэгчтэй дэлгэц дээр энэ
+   хэсгийг огт үйлчлүүлэхгүй — утсан дээр "наалдсан hover" гарахгүй. */
+
+@media (hover: hover) and (pointer: fine) {
+  .row-ex__body:hover,
+  .mark:hover,
+  .row-day:hover,
+  .daybar__today:hover,
+  .swap-toggle:hover,
+  .swapopt:hover:not([disabled]),
+  .daybar__step:hover:not([disabled]),
+  .set:hover:not([disabled]):not(.is-on),
+  .danger:hover:not(.is-armed) {
+    background-color: var(--bg-3);
+  }
+
+  /* Тэмдэглэгдсэн сет аль хэдийн акцентаар дүүрсэн — дэвсгэрийг нь
+     бүдгэрүүлэхийн оронд бага зэрэг тодруулна. */
+  .set.is-on:hover {
+    background-color: var(--fg);
+  }
+
+  .timer__stop:hover,
+  .swapped__undo:hover,
+  .danger-cancel:hover {
+    color: var(--fg);
+  }
 }
