@@ -7,6 +7,7 @@ import { STATE_KEY, msUntilMidnight, todayString } from './data.js';
 import { flushBridge, publishBridge, schedulePublish } from './bridge.js';
 import { loadProgram, getDays } from './program.js';
 import { loadState, reconcile, reload, subscribe } from './storage.js';
+import { checkForUpdate, registerServiceWorker } from './updates.js';
 import * as timer from './timer.js';
 import {
   mount,
@@ -64,6 +65,9 @@ function bindLifecycle() {
     // Шөнө дундыг далд байхад давсан бол товлолт хоцорсон байж мэднэ.
     scheduleMidnight();
     schedulePublish();
+    // Апп руу буцаж ирэх нь шинэ хувилбар шалгах хамгийн тохиромжтой мөч —
+    // хэрэглэгч энэ агшинд юу ч дараагүй байна.
+    checkForUpdate();
   });
 
   // Апп бүрмөсөн хаагдах / арын дэвсгэр рүү орох сүүлчийн боломж.
@@ -131,6 +135,10 @@ async function start() {
 
     bindLifecycle();
     publishBridge();
+
+    // Офлайн ажиллагаа. Апп бүрэн ажиллаж эхэлсний ДАРАА бүртгэнэ —
+    // service worker нь нэмэлт давуу тал, эхлүүлэлтийн нөхцөл биш.
+    registerServiceWorker();
   } catch (err) {
     console.error(err);
     showError(
