@@ -12,7 +12,7 @@ import * as timer from './timer.js';
 
 import { renderDay, resetProgress } from './views/day.js';
 import { renderWeek } from './views/week.js';
-import { armClear, renderHistory } from './views/history.js';
+import { armClear, openDetails, renderHistory, toggleDetails } from './views/history.js';
 
 /** @typedef {import('./types.js').Day} Day */
 /** @typedef {import('./types.js').SetMarks} SetMarks */
@@ -223,6 +223,11 @@ function handleHistoryClick(event) {
 
   if (action === 'day') return showDay(date || null);
 
+  if (action === 'details') {
+    toggleDetails();
+    return render();
+  }
+
   if (action === 'clear-arm') armClear(true);
   else if (action === 'clear-cancel') armClear(false);
   else if (action === 'clear-confirm') {
@@ -352,8 +357,9 @@ function applyTab(name) {
     indicator.style.transform = `translateX(${TAB_ORDER.indexOf(name) * 100}%)`;
   }
 
-  armClear(false);   // таб солиход устгах баталгаажуулалт тайлагдана
-  swapOpen = false;  // хагас нээлттэй жагсаалт өөр дэлгэц рүү дагаж очихгүй
+  armClear(false);     // таб солиход устгах баталгаажуулалт тайлагдана
+  openDetails(false);  // түүх нь үргэлж чеклистээрээ эхэлнэ
+  swapOpen = false;    // хагас нээлттэй жагсаалт өөр дэлгэц рүү дагаж очихгүй
   resetProgress();
   render();
 

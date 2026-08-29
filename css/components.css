@@ -413,9 +413,10 @@
   color: var(--accent);
 }
 
-/* ---------- Өдөр солих ----------
-   Хоёрдогч үйлдэл: дэлгэцийн гол хэмнэлийг эвдэхгүй, зөвхөн хэрэгтэй үед
-   нүдэнд орох ёстой. Тиймээс дэвсгэргүй, зөвхөн зааг. */
+/* ---------- Задардаг хэсэг (disclosure) ----------
+   "Өдөр солих" ба түүхийн "Дэлгэрэнгүй" хоёр нь ижил зан төлөвтэй: хоёрдогч
+   үйлдэл, хэрэгтэй үед нь задарна. Тиймээс НЭГ хэлбэр — тасархай зааг,
+   дэвсгэргүй. Дэлгэцийн гол хэмнэлийг эвдэхгүй. */
 
 .swap {
   margin-bottom: var(--s6);
@@ -426,7 +427,7 @@
   margin-bottom: 0;
 }
 
-.swap-toggle {
+.disclosure {
   display: flex;
   align-items: center;
   gap: var(--s3);
@@ -444,43 +445,43 @@
               color var(--t-tap) var(--ease);
 }
 
-.swap-toggle:active {
+.disclosure:active {
   background-color: var(--bg-2);
   color: var(--fg);
 }
 
-.swap-toggle__icon {
+.disclosure__icon {
   flex: 0 0 auto;
   display: flex;
   color: var(--fg-3);
 }
 
-.swap-toggle__text {
+.disclosure__text {
   flex: 1 1 auto;
 }
 
-.swap-toggle__chevron {
+.disclosure__chevron {
   flex: 0 0 auto;
   display: flex;
   color: var(--fg-3);
   transition: transform var(--t-open) var(--ease);
 }
 
-.swap-toggle.is-open {
+.disclosure.is-open {
   border-style: solid;
   color: var(--fg);
 }
 
-.swap-toggle.is-open .swap-toggle__chevron {
+.disclosure.is-open .disclosure__chevron {
   transform: rotate(180deg);
 }
 
-.swap__panel {
+.disclosure__panel {
   margin-top: var(--s3);
   animation: block-in var(--t-open) var(--ease);
 }
 
-.swap__panel .hint {
+.disclosure__panel .hint {
   margin: 0 0 var(--s3);
 }
 
@@ -647,22 +648,37 @@
 
 /* ---------- Амралтын өдөр ---------- */
 
+/* Амралтын өдөр нь хагас хоосон дэлгэц байх ёсгүй — энэ бол хөтөлбөрийн
+   нэг хэсэг. Аппын бусад блоктой ижил карт: сарны тэмдэг, том гарчиг,
+   доор нь жижиг зөвлөмж. */
 .rest {
-  padding: var(--s8) 0;
-  border-top: 1px solid var(--line);
+  padding: var(--s6) var(--s4) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  box-shadow: var(--edge);
+}
+
+.rest__icon {
+  display: flex;
+  margin-bottom: var(--s4);
+  color: var(--fg-3);
 }
 
 .rest__title {
   font-size: var(--t-20);
   font-weight: 600;
+  line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
+/* Зөвлөмж бол хоёрдогч — гарчигаас нэг шат доош. */
 .rest__text {
-  margin-top: var(--s3);
-  font-size: var(--t-14);
-  color: var(--fg-2);
-  max-width: 30ch;
+  margin-top: var(--s2);
+  font-size: var(--t-12);
+  line-height: 1.5;
+  color: var(--fg-3);
+  max-width: 34ch;
 }
 
 .rest__next {
@@ -811,6 +827,189 @@
   color: var(--fg);
 }
 
+/* ---------- Чеклист: 30 хоногийн хуанлийн тор ----------
+   30 мөр гүйлгэхийн оронд нэг дэлгэцэнд багтсан тор. Нүд бүр нь өдрийн
+   дэлгэц рүү нээгддэг товч — жагсаалтын мөртэй яг ижил үйлдэл.
+   Хэлбэр нь аппд аль хэдийн байгаа сетийн товчтой (`.set`) нэг гэр бүл:
+   дугуйрсан дөрвөлжин, дүүрэхдээ акцент. */
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.grid__head,
+.grid__row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s1);
+}
+
+.grid__head {
+  margin-bottom: var(--s1);
+}
+
+.grid__wd {
+  text-align: center;
+  color: var(--fg-3);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  /* Дөрвөлжин хэвээр: өргөн нь баганаас, өндөр нь түүнтэй тэнцүү. */
+  aspect-ratio: 1;
+  min-height: 40px;
+  padding: 0;
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  box-shadow: var(--edge);
+  color: var(--fg-2);
+  transition: background-color var(--t-tap) var(--ease),
+              border-color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
+}
+
+.cell:active {
+  transform: scale(0.94);
+}
+
+/* Дутуу өдрийн дүүргэлт — нүдний ёроолоос хийсэн хувь хүртэл.
+   Огнооны ард үлдэнэ (z-index биш, зүгээр л эхэлж зурагдана). */
+.cell__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 0 7px 7px;
+  background-color: var(--accent-dim);
+  opacity: 0.5;
+}
+
+.cell__day {
+  font-size: var(--t-12);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cell__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 15px;
+  font-size: var(--t-12);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Биелсэн: акцентаар дүүрч, чек тавигдана. */
+.cell.is-done {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Дутуу: бүтнээр дүүрэхгүй — хийсэн хэсэг нь л дүүрнэ. */
+.cell.is-partial {
+  border-color: var(--fg-2);
+  color: var(--fg);
+  overflow: hidden;
+}
+
+.cell.is-partial .cell__day {
+  position: relative;
+}
+
+/* Хийгээгүй: хоосон нүд. Бүдэг ч гэсэн огноо нь уншигдана. */
+.cell.is-none {
+  color: var(--fg-3);
+}
+
+/* Удахгүй ирэх өдөр — буруутгах эрт. */
+.cell.is-upcoming {
+  border-style: dashed;
+  color: var(--fg-3);
+}
+
+/* Тайлбар доторх амралтын зураас — торон дээрх "зааггүй" төлөвийг
+   тайлбарт үзүүлэх ганц арга. */
+.cell__dash {
+  width: 10px;
+  height: 1.5px;
+  background-color: var(--fg-3);
+}
+
+/* Амралт: хэмнэлийн цаад давхарга — зааггүй, зөвхөн бүдэг тоо. */
+.cell.is-rest {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--fg-3);
+  opacity: 0.6;
+}
+
+/* Өнөөдөр: тороос нэг харцаар олдоно. */
+.cell.is-today {
+  border-color: var(--accent);
+}
+
+.cell.is-today.is-done {
+  box-shadow: var(--edge), 0 0 0 2px var(--bg-1), 0 0 0 3px var(--accent-dim);
+}
+
+/* Торны гадна унасан өдөр — байрыг нь л эзэлнэ. */
+.cell--empty {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Тайлбар: тэмдэг бүр юу гэсэн үг вэ. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s4);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.legend__text {
+  font-size: var(--t-12);
+  color: var(--fg-3);
+}
+
+/* Тайлбар доторх нүд нь зөвхөн жишээ — дарагдахгүй, жижиг. */
+.cell--chip {
+  width: 18px;
+  min-height: 18px;
+  border-radius: 5px;
+}
+
+.cell--chip .cell__mark {
+  height: auto;
+}
+
+.cell--chip.is-partial .cell__fill {
+  height: 45%;
+  border-radius: 0 0 4px 4px;
+}
+
+.cell--chip svg {
+  width: 11px;
+  height: 11px;
+}
+
 /* ---------- Цуваа ----------
    "Хэдэн өдөр дараалан барив" гэдэг нь 30 хоногийн нийлбэрээс илүү
    шууд ойлгогддог тул хамгийн дээр гарна. */
@@ -948,10 +1147,11 @@
   .mark:hover,
   .row-day:hover,
   .daybar__today:hover,
-  .swap-toggle:hover,
+  .disclosure:hover,
   .swapopt:hover:not([disabled]),
   .daybar__step:hover:not([disabled]),
   .set:hover:not([disabled]):not(.is-on),
+  .cell:hover:not(.is-done):not(.cell--empty),
   .danger:hover:not(.is-armed) {
     background-color: var(--bg-3);
   }

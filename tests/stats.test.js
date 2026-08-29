@@ -8,6 +8,7 @@ import { installStorage, sampleProgramSource } from './helpers.js';
 
 const stores = installStorage();
 
+const { weekdayIndex } = await import('../js/data.js');
 const { normalizeProgram, setProgram } = await import('../js/program.js');
 const storage = await import('../js/storage.js');
 const stats = await import('../js/stats.js');
@@ -154,6 +155,35 @@ test('түүхийн цонх нь анхны тэмдэглэгээнээс ө�
   mark(THU, 'full');
   // Анхны тэмдэглэгээ 2 хоногийн өмнө ч гэсэн доод хэмжээ нь 7 хоног.
   assert.equal(stats.historySpan(SAT, 30), 7);
+});
+
+test('тэмдэглэгээ огт байхгүй үед 30 хоосон өдөр харуулахгүй', () => {
+  reset();
+  // Аппыг дөнгөж нээсэн хүнд "чи 30 өдөр хийсэнгүй" гэж хэлэх нь худал.
+  assert.equal(stats.historySpan(SAT, 30), 7);
+  assert.equal(stats.historySummary(SAT, 30).rows.length, 7);
+});
+
+test('хуанлийн тор нь гарагийн баганадаа зөв унана', () => {
+  reset();
+  mark(THU, 'full');
+
+  const calendar = stats.historyCalendar(SAT, 30);
+  const cells = calendar.weeks.flatMap((week) => week.cells);
+
+  assert.equal(cells.length % 7, 0, 'эгнээ бүр 7 нүдтэй');
+  assert.equal(cells.filter(Boolean).length, calendar.span, 'өдөр бүр нэг л нүд эзэлнэ');
+
+  for (const week of calendar.weeks) {
+    week.cells.forEach((cell, column) => {
+      if (cell) assert.equal(weekdayIndex(cell.date), column, `${cell.date} буруу баганад байна`);
+    });
+  }
+
+  // Тор нь хуучнаас шинэ рүү: сүүлчийн нүд нь өнөөдөр.
+  const filled = cells.filter(Boolean);
+  assert.equal(filled[0].date, calendar.from);
+  assert.equal(filled[filled.length - 1].date, SAT);
 });
 
 test('түүхийн хураангуй: дутуу нь "хийгээгүй" рүү ордоггүй', () => {

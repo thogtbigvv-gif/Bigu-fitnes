@@ -235,14 +235,14 @@ function renderSwap(date, day, ctx) {
 
   const toggle = h('button', {
     type: 'button',
-    class: `swap-toggle${ctx.swapOpen ? ' is-open' : ''}`,
+    class: `disclosure${ctx.swapOpen ? ' is-open' : ''}`,
     'aria-expanded': ctx.swapOpen ? 'true' : 'false',
     'aria-controls': 'swap-list',
     dataset: { action: 'swap-open' }
   }, [
-    h('span', { class: 'swap-toggle__icon', icon: ICONS.swap, 'aria-hidden': 'true' }),
-    h('span', { class: 'swap-toggle__text', text: label }),
-    h('span', { class: 'swap-toggle__chevron', icon: ICONS.chevron, 'aria-hidden': 'true' })
+    h('span', { class: 'disclosure__icon', icon: ICONS.swap, 'aria-hidden': 'true' }),
+    h('span', { class: 'disclosure__text', text: label }),
+    h('span', { class: 'disclosure__chevron', icon: ICONS.chevron, 'aria-hidden': 'true' })
   ]);
 
   const options = ctx.swapOpen ? swapOptions(date, hasMarks) : [];
@@ -251,7 +251,7 @@ function renderSwap(date, day, ctx) {
     banner,
     toggle,
     ctx.swapOpen
-      ? h('div', { class: 'swap__panel', id: 'swap-list' }, [
+      ? h('div', { class: 'disclosure__panel', id: 'swap-list' }, [
         h('p', {
           class: 'hint',
           text: 'Сонгосон өдөртэйгээ бэлтгэлээ солино. Хоёр өдөр байраа солих тул '
@@ -281,7 +281,11 @@ function renderRest(root, date, day, isToday, ctx) {
     // яг энд хэрэгтэй. Ирээдүйн өдөр ч мөн адил: "маргааш ядрах нь тодорхой"
     // гэдэг яг тэр үед мэдэгддэг.
     renderSwap(date, day, ctx),
+    // Урьд нь амралтын өдөр нь задгай текст байсан тул дэлгэц хагас хоосон,
+    // "энд юу ч алга" гэсэн мэдрэмж үлдээдэг байв. Одоо аппын бусад хэсэгтэй
+    // ижил КАРТ: сарны тэмдэг, том гарчиг, доор нь жижиг зөвлөмж.
     h('section', { class: 'rest' }, [
+      h('div', { class: 'rest__icon', icon: ICONS.moon, 'aria-hidden': 'true' }),
       h('div', {
         class: 'rest__title',
         text: isToday ? 'Өнөөдөр ачаалал алга' : 'Ачаалалгүй өдөр'
