@@ -31,6 +31,21 @@ let confirmClear = false;
 /** Мөр мөрөөр харуулах хэсэг задарсан эсэх (таб солиход хаагдана). */
 let detailsOpen = false;
 
+/**
+ * Дэлгэц ДӨНГӨЖ нээгдсэн үү.
+ *
+ * Түүх нь тэмдэглэгээ солигдох бүрд ч дахин зурагддаг. Гарч ирэх
+ * хөдөлгөөнийг тэр болгонд тоглуулбал дэлгэц анивчсан мэт болно —
+ * тиймээс зөвхөн таб солиход ui.js энэ тугийг тавина, зурсны дараа
+ * шууд унтарна.
+ */
+let fresh = false;
+
+/** Дараагийн зурагдалт дээр гарч ирэх хөдөлгөөнийг нэг удаа зөвшөөрнө. */
+export function markFresh() {
+  fresh = true;
+}
+
 /** @param {boolean} value */
 export function armClear(value) {
   confirmClear = Boolean(value);
@@ -57,13 +72,16 @@ function statTile(value, label) {
   ]);
 }
 
-/** @param {{streak: number, rate: number}} summary */
-function renderStreak(summary) {
+/**
+ * @param {{streak: number, rate: number}} summary
+ * @param {boolean} animate
+ */
+function renderStreak(summary, animate) {
   const line = summary.streak > 0
     ? `Цуваа ${summary.streak} бэлтгэл`
     : 'Цуваа тасарсан';
 
-  return h('div', { class: 'streak' }, [
+  return h('div', { class: `streak${animate ? ' is-fresh' : ''}` }, [
     h('div', { class: 'streak__main' }, [
       h('span', { class: 'streak__label label', text: 'Одоогийн цуваа' }),
       h('span', { class: 'streak__value num', text: line })
@@ -123,8 +141,9 @@ function renderCell(cell, today) {
  * @param {{weeks: Array<{start: string, cells: Array<DayRow|null>}>,
  *          from: string, to: string}} calendar
  * @param {string} today
+ * @param {boolean} animate
  */
-function renderChecklist(calendar, today) {
+function renderChecklist(calendar, today, animate) {
   return h('section', { class: 'section' }, [
     h('div', { class: 'group__head' }, [
       h('h2', { class: 'group__title label', text: 'Чеклист' }),
@@ -134,7 +153,7 @@ function renderChecklist(calendar, today) {
       })
     ]),
 
-    h('div', { class: 'grid' }, [
+    h('div', { class: `grid${animate ? ' is-fresh' : ''}` }, [
       // Гарагийн толгой — багана бүр аль гараг болохыг нэг л удаа хэлнэ.
       h('div', { class: 'grid__head', 'aria-hidden': 'true' },
         WEEKDAY_SHORT.map((name) => h('span', { class: 'grid__wd label', text: name }))),
@@ -260,6 +279,10 @@ export function renderHistory(root) {
   const calendar = historyCalendar(today, HISTORY_DAYS);
   const hasData = summary.done + summary.partial > 0;
 
+  // Гарч ирэх хөдөлгөөн нэг л удаа — дараагийн зурагдалт чимээгүй.
+  const animate = fresh;
+  fresh = false;
+
   append(root, [
     h('header', { class: 'head' }, [
       h('div', { class: 'head__eyebrow label', text: getProgramName() }),
@@ -267,16 +290,16 @@ export function renderHistory(root) {
       h('h1', { class: 'head__title', text: 'Түүх' })
     ]),
 
-    renderStreak(summary),
+    renderStreak(summary, animate),
 
-    h('div', { class: 'stats' }, [
+    h('div', { class: `stats${animate ? ' is-fresh' : ''}` }, [
       statTile(summary.done, 'Биелсэн'),
       statTile(summary.partial, 'Дутуу'),
       statTile(summary.missed, 'Хийгээгүй'),
       statTile(summary.rest, 'Амралт')
     ]),
 
-    renderChecklist(calendar, today),
+    renderChecklist(calendar, today, animate),
     renderDetails(summary, today),
     renderDangerZone(hasData)
   ]);

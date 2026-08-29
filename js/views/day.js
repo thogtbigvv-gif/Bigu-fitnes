@@ -42,6 +42,18 @@ let lastPct = 0;
 /** @type {number|null} */
 let progressFrame = null;
 
+/**
+ * Дэлгэц ДӨНГӨЖ нээгдсэн үү. Сет тэмдэглэх бүрд дэлгэц бүхэлдээ дахин
+ * баригддаг тул жагсаалтын гарч ирэх хөдөлгөөнийг тэр болгонд тоглуулж
+ * болохгүй — зөвхөн өдөр/таб солиход нэг удаа.
+ */
+let fresh = false;
+
+/** Дараагийн зурагдалт дээр жагсаалтын хөдөлгөөнийг нэг удаа зөвшөөрнө. */
+export function markFresh() {
+  fresh = true;
+}
+
 /** Дэлгэц солигдоход progress дэмий гүйхээс сэргийлж тэглэнэ. */
 export function resetProgress() {
   lastPct = 0;
@@ -432,6 +444,9 @@ export function renderDay(root, ctx) {
   clear(root);
 
   const { date, today } = ctx;
+  // Гарч ирэх хөдөлгөөн нэг л удаа — тэмдэглэх бүрд давтагдахгүй.
+  const animate = fresh;
+  fresh = false;
   const isToday = date === today;
   const isFuture = date > today;
   const editable = !isFuture;
@@ -495,7 +510,7 @@ export function renderDay(root, ctx) {
 
   root.appendChild(h('section', { class: 'section' }, [
     h('h2', { class: 'section__title label', text: 'Дасгалууд' }),
-    h('ul', { class: 'list' }, day.exercises.map((exercise) =>
+    h('ul', { class: `list${animate ? ' is-fresh' : ''}` }, day.exercises.map((exercise) =>
       renderExerciseRow(exercise, sets[exercise.id] || [], {
         openCards: ctx.openCards,
         flash: ctx.flash,

@@ -10,9 +10,15 @@ import { clearAll, getStorageError, saveDay } from './storage.js';
 import { countDone, isExerciseDone, readSets } from './stats.js';
 import * as timer from './timer.js';
 
-import { renderDay, resetProgress } from './views/day.js';
+import { markFresh as markDayFresh, renderDay, resetProgress } from './views/day.js';
 import { renderWeek } from './views/week.js';
-import { armClear, openDetails, renderHistory, toggleDetails } from './views/history.js';
+import {
+  armClear,
+  markFresh as markHistoryFresh,
+  openDetails,
+  renderHistory,
+  toggleDetails
+} from './views/history.js';
 
 /** @typedef {import('./types.js').Day} Day */
 /** @typedef {import('./types.js').SetMarks} SetMarks */
@@ -361,6 +367,11 @@ function applyTab(name) {
   openDetails(false);  // түүх нь үргэлж чеклистээрээ эхэлнэ
   swapOpen = false;    // хагас нээлттэй жагсаалт өөр дэлгэц рүү дагаж очихгүй
   resetProgress();
+
+  // Дэлгэц СОЛИГДОЖ байна — агуулга нь нэг удаа гарч ирж болно.
+  // (Тэмдэглэх бүрд болдог энгийн дахин зурагдалт дээр биш.)
+  markDayFresh();
+  markHistoryFresh();
   render();
 
   // Таб солиход дээрээс нь эхлэх нь зөв — энэ нь render()-ийн скролл

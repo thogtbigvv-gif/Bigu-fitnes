@@ -1168,3 +1168,156 @@
     color: var(--fg);
   }
 }
+
+/* ---------- Микро-хөдөлгөөн ----------
+   Дүрэм: анзаарагдах ёсгүй, зөвхөн МЭДРЭГДЭХ ёстой. Тиймээс бүгд богино,
+   зөвхөн transform / opacity (хөтчийн хувьд хамгийн хямд хоёр шинж чанар),
+   өнгө ч шинэ хэлбэр ч нэмэхгүй.
+   `prefers-reduced-motion: reduce` дор эдгээр бүгд base.css дотор
+   зогсоогдоно — энэ хэсэг тусдаа үл хамаарах зүйл үүсгэхгүй. */
+
+/* 1. Дарах физик: хүрэхэд шуурхай, тавихад зөөлөн.
+      Ижил хугацаа хоёр тийшээ явбал товч наалдсан мэт болдог. */
+.set,
+.cell,
+.mark,
+.row-ex__body,
+.row-day,
+.swapopt,
+.daybar__step,
+.daybar__today,
+.disclosure,
+.danger,
+.tab__icon {
+  transition-duration: var(--t-tap);
+}
+
+.set:active,
+.cell:active,
+.mark:active,
+.row-ex__body:active,
+.row-day:active,
+.swapopt:active,
+.daybar__step:active,
+.daybar__today:active,
+.disclosure:active,
+.danger:active {
+  transition-duration: var(--t-press);
+}
+
+/* 2. Дөнгөж тэмдэглэсэн сет: цагирган долгион нэг л удаа тарна.
+      Аль сетийг дарсныг нүд өөрөө хөөж очно. */
+.set,
+.timer {
+  position: relative;
+}
+
+.set.is-flash.is-on::after,
+.timer.is-done::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--accent-dim);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: ring-out 460ms var(--ease) forwards;
+}
+
+@keyframes ring-out {
+  from { opacity: 0.55; transform: scale(1); }
+  to   { opacity: 0;    transform: scale(1.08); }
+}
+
+/* Тоолуур том тул долгион нь бага зэрэг л тэлнэ. */
+.timer.is-done::after {
+  animation-name: ring-out-wide;
+  animation-duration: 560ms;
+}
+
+@keyframes ring-out-wide {
+  from { opacity: 0.5; transform: scale(1); }
+  to   { opacity: 0;   transform: scale(1.012); }
+}
+
+/* 3. Идэвхтэй таб: icon нь үл мэдэг дээшилнэ. Заагчийн гулсалттай хамт
+      "энэ таб сонгогдлоо" гэдгийг хоёр давхар хэлнэ. */
+.tab.is-active .tab__icon {
+  transform: translateY(-1px);
+}
+
+.tab:active .tab__icon {
+  transform: scale(0.9);
+}
+
+/* 4. Чеклист нээгдэхэд нүднүүд ЗӨВХӨН ЭХНИЙ удаад долгион шиг гарч ирнэ.
+      Тэмдэглэгээ солигдоод дэлгэц дахин зурагдах бүрд давтагдвал
+      анивчсан мэт болно — тиймээс ui.js зөвхөн таб солиход `is-fresh`
+      тавьдаг. Мөрийн дугаар (--row) ба баганы дугаар (--col) нийлж
+      хойшлолт болно: тор нь зүүн дээднээс баруун доош урсана. */
+.grid__row:nth-child(2) { --row: 0; }
+.grid__row:nth-child(3) { --row: 1; }
+.grid__row:nth-child(4) { --row: 2; }
+.grid__row:nth-child(5) { --row: 3; }
+.grid__row:nth-child(6) { --row: 4; }
+.grid__row:nth-child(7) { --row: 5; }
+
+.grid.is-fresh .cell:nth-child(1) { --col: 0; }
+.grid.is-fresh .cell:nth-child(2) { --col: 1; }
+.grid.is-fresh .cell:nth-child(3) { --col: 2; }
+.grid.is-fresh .cell:nth-child(4) { --col: 3; }
+.grid.is-fresh .cell:nth-child(5) { --col: 4; }
+.grid.is-fresh .cell:nth-child(6) { --col: 5; }
+.grid.is-fresh .cell:nth-child(7) { --col: 6; }
+
+.grid.is-fresh .cell {
+  animation: cell-in 240ms var(--ease) backwards;
+  animation-delay: calc(var(--row, 0) * 26ms + var(--col, 0) * 8ms);
+}
+
+@keyframes cell-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 5. Түүхийн дээд хэсэг: цуваа, дараа нь дөрвөн тоо дараалж босно. */
+.streak.is-fresh {
+  animation: block-in var(--t-open) var(--ease) backwards;
+}
+
+.stats.is-fresh .stat {
+  animation: cell-in 260ms var(--ease) backwards;
+}
+
+.stats.is-fresh .stat:nth-child(1) { animation-delay: 40ms; }
+.stats.is-fresh .stat:nth-child(2) { animation-delay: 70ms; }
+.stats.is-fresh .stat:nth-child(3) { animation-delay: 100ms; }
+.stats.is-fresh .stat:nth-child(4) { animation-delay: 130ms; }
+
+/* 6. Задардаг жагсаалт (өдөр солих, дэлгэрэнгүй): мөрүүд дараалж унана.
+      Хойшлолт 8 мөрөөр таслагдана — 30 мөр дараалж унавал хүлээлт болно. */
+.disclosure__panel .list-tight > li {
+  animation: cell-in 220ms var(--ease) backwards;
+  animation-delay: 90ms;
+}
+
+.disclosure__panel .list-tight > li:nth-child(1) { animation-delay: 20ms; }
+.disclosure__panel .list-tight > li:nth-child(2) { animation-delay: 30ms; }
+.disclosure__panel .list-tight > li:nth-child(3) { animation-delay: 40ms; }
+.disclosure__panel .list-tight > li:nth-child(4) { animation-delay: 50ms; }
+.disclosure__panel .list-tight > li:nth-child(5) { animation-delay: 60ms; }
+.disclosure__panel .list-tight > li:nth-child(6) { animation-delay: 70ms; }
+.disclosure__panel .list-tight > li:nth-child(7) { animation-delay: 80ms; }
+
+/* 7. Өдрийн дасгалын жагсаалт: дэлгэц нээгдэхэд мөрүүд дараалж унана.
+      Тэмдэглэх бүрд биш — зөвхөн өдөр/таб солиход (`is-fresh`). */
+.list.is-fresh > li {
+  animation: cell-in 240ms var(--ease) backwards;
+  animation-delay: 110ms;
+}
+
+.list.is-fresh > li:nth-child(1) { animation-delay: 20ms; }
+.list.is-fresh > li:nth-child(2) { animation-delay: 40ms; }
+.list.is-fresh > li:nth-child(3) { animation-delay: 55ms; }
+.list.is-fresh > li:nth-child(4) { animation-delay: 70ms; }
+.list.is-fresh > li:nth-child(5) { animation-delay: 85ms; }
+.list.is-fresh > li:nth-child(6) { animation-delay: 100ms; }
