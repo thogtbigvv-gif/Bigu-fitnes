@@ -579,8 +579,13 @@ npm test          # node --test "tests/*.test.js"
 `jsconfig.json` дахь `checkJs: true` нь тэдгээрийг **бодит шалгалт** болгоно:
 
 ```sh
-npx typescript@5.7 tsc --noEmit -p jsconfig.json
+npm run typecheck
 ```
+
+(Дотроо `npx --yes --package typescript@5.7 tsc --noEmit -p jsconfig.json` дуудна.
+`--package` нь зайлшгүй: `typescript` багц дотор `typescript` нэртэй тушаал
+БАЙХГҮЙ, `tsc` гэж байдаг. Үүнгүйгээр npx "could not determine executable to
+run" гэж унана.)
 
 Хоёулаа `.github/workflows/ci.yml` дотор push / PR бүр дээр ажиллана. Мөн
 Pages рүү deploy хийхээс өмнө тест ажиллана — унасан код амьд сайт руу гарахгүй.

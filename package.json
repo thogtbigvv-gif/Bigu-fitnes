@@ -6,6 +6,7 @@
   "description": "Өдөр тутмын дасгалын төлөвлөгөө тэмдэглэгч — build алхамгүй, статик ES module апп.",
   "scripts": {
     "test": "node --test \"tests/*.test.js\"",
+    "typecheck": "npx --yes --package typescript@5.7 tsc --noEmit -p jsconfig.json",
     "serve": "python3 -m http.server 8000"
   }
 }
