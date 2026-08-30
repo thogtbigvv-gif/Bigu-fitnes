@@ -64,10 +64,18 @@
  */
 
 /**
+ * Өдөр солилцоо: огноо -> хосолсон огноо. ҮРГЭЛЖ ХАРИЛЦАН байна
+ * (swaps[a] === b бол swaps[b] === a). "Энэ өдөр нөгөө өдрийн
+ * төлөвлөгөөг хийнэ" гэсэн утгатай.
+ * @typedef {Record<string, string>} Swaps
+ */
+
+/**
  * localStorage-ийн бүтэн төлөв.
  * @typedef {Object} AppState
  * @property {number} version
  * @property {Record<string, Session>} sessions
+ * @property {Swaps} swaps
  */
 
 /**
@@ -96,6 +104,16 @@
  * @property {string} date
  * @property {DayStatus} status
  * @property {DisplayKey} key
+ */
+
+/**
+ * Өдөр солих цонхонд харагдах нэг сонголт.
+ * @typedef {Object} SwapOption
+ * @property {string} date
+ * @property {Day|null} day       Тэр өдөр хийгдэх төлөвлөгөө
+ * @property {boolean} isToday
+ * @property {boolean} isPast
+ * @property {boolean} blocked    Тэмдэглэгээтэй тул солиж болохгүй
  */
 
 /**

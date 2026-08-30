@@ -14,10 +14,11 @@ import {
   percent,
   shiftDate,
   startOfWeek,
-  todayString
+  todayString,
+  weekdayIndex
 } from './data.js';
 
-import { getDayForDate } from './program.js';
+import { dayForDate } from './schedule.js';
 import { firstSessionDate, getDaySets, subscribe } from './storage.js';
 
 /** @typedef {import('./types.js').Day} Day */
@@ -142,7 +143,7 @@ export function dayStatus(date) {
  * @returns {DayStatus}
  */
 function computeDayStatus(date) {
-  const day = getDayForDate(date);
+  const day = dayForDate(date);
   if (!day) return { key: 'none', day: null, done: 0, total: 0, setsDone: 0, setsTotal: 0 };
   if (day.isRest) return { key: 'rest', day, done: 0, total: 0, setsDone: 0, setsTotal: 0 };
 
@@ -194,7 +195,7 @@ export function describeStatus(status) {
 export function nextTrainingDay(fromDate) {
   for (let i = 1; i <= WEEK_DAYS; i += 1) {
     const date = shiftDate(fromDate, i);
-    const day = getDayForDate(date);
+    const day = dayForDate(date);
     if (day && !day.isRest) return { date, day };
   }
   return null;
@@ -305,7 +306,11 @@ export function historySpan(today = todayString(), count = HISTORY_DAYS) {
   const first = firstSessionDate();
 
   let start = oldest;
-  if (first && first > start) start = first;
+  // Тэмдэглэгээ ОГТ байхгүй бол 30 хоосон өдөр харуулах нь "чи 30 өдөр
+  // хийсэнгүй" гэсэн худал буруутгал. Аппыг дөнгөж нээсэн хүнд доод
+  // цонхыг л үзүүлнэ.
+  if (!first) start = floor;
+  else if (first > start) start = first;
   if (start > floor) start = floor;
 
   return Math.max(1, Math.min(span, daysBetween(today, start) + 1));
@@ -345,6 +350,50 @@ export function historySummary(today = todayString(), count = HISTORY_DAYS) {
     rate: percent(totals.done, planned),
     streak: currentStreak(today)
   };
+}
+
+/**
+ * Түүхийн цонхыг ХУАНЛИЙН тор болгож өгнө: долоо хоног бүр 7 нүдтэй,
+ * баганууд нь Даваа .. Ням.
+ *
+ * Яагаад: 30 мөрийн урт жагсаалт нь "энэ сард би хэр тогтвортой байв?"
+ * гэсэн асуултад хариулдаггүй — гүйлгэж байж л уншина. Тор нь нэг дэлгэцэнд
+ * багтаж, тасарсан газар нь нүдэнд шууд харагдана.
+ *
+ * Цонхны гадна унасан нүд `null` болно (эхний долоо хоногийн эхэн,
+ * сүүлчийн долоо хоногийн төгсгөл) — зурах тал тэнд хоосон нүх үлдээнэ.
+ *
+ * @param {string} [today]
+ * @param {number} [count]
+ * @returns {{weeks: Array<{start: string, cells: Array<DayRow|null>}>,
+ *            from: string, to: string, span: number}}
+ */
+export function historyCalendar(today = todayString(), count = HISTORY_DAYS) {
+  const span = historySpan(today, count);
+  const from = shiftDate(today, -(span - 1));
+
+  /** @type {Array<{start: string, cells: Array<DayRow|null>}>} */
+  const weeks = [];
+
+  for (let i = 0; i < span; i += 1) {
+    const date = shiftDate(from, i);
+    const column = weekdayIndex(date);
+
+    // Шинэ долоо хоног эхэлж байвал (эсвэл хамгийн эхний нүд) хоосон
+    // 7 нүдтэй эгнээ нээнэ.
+    if (weeks.length === 0 || column === 0) {
+      weeks.push({ start: startOfWeek(date), cells: Array(WEEK_DAYS).fill(null) });
+    }
+
+    const status = dayStatus(date);
+    weeks[weeks.length - 1].cells[column] = {
+      date,
+      status,
+      key: displayKey(status, date, today)
+    };
+  }
+
+  return { weeks, from, to: today, span };
 }
 
 /**

@@ -8,7 +8,9 @@
 
 import {
   WEEKDAY_NAMES,
+  WEEKDAY_SHORT,
   formatClock,
+  formatDate,
   formatDateLong,
   formatRest,
   percent,
@@ -17,11 +19,13 @@ import {
   weekdayIndex
 } from '../data.js';
 import { ICONS, append, clear, h } from '../dom.js';
-import { getDayForDate, getProgramName } from '../program.js';
+import { getProgramName } from '../program.js';
+import { dayForDate, swapOptions, swapPartner } from '../schedule.js';
 import { getDayResult } from '../storage.js';
 import {
   countDone,
   countSets,
+  dayStatus,
   isExerciseDone,
   nextTrainingDay,
   readSets
@@ -37,6 +41,18 @@ let lastPct = 0;
 /** Хүлээгдэж байгаа хөдөлгөөний хүсэлт — давхарлахаас сэргийлнэ. */
 /** @type {number|null} */
 let progressFrame = null;
+
+/**
+ * Дэлгэц ДӨНГӨЖ нээгдсэн үү. Сет тэмдэглэх бүрд дэлгэц бүхэлдээ дахин
+ * баригддаг тул жагсаалтын гарч ирэх хөдөлгөөнийг тэр болгонд тоглуулж
+ * болохгүй — зөвхөн өдөр/таб солиход нэг удаа.
+ */
+let fresh = false;
+
+/** Дараагийн зурагдалт дээр жагсаалтын хөдөлгөөнийг нэг удаа зөвшөөрнө. */
+export function markFresh() {
+  fresh = true;
+}
 
 /** Дэлгэц солигдоход progress дэмий гүйхээс сэргийлж тэглэнэ. */
 export function resetProgress() {
@@ -136,6 +152,129 @@ function renderHead(date, day, extra) {
   ]);
 }
 
+/* ---------------- Өдөр солих ----------------
+   Ажлаас ядраад маргаашийн бэлтгэлээ хийж чадахгүй бол түүнийгээ амралтын
+   өдөр рүүгээ зөөнө. Хоёр өдөр ХАРИЛЦАН солигдоно: бэлтгэл алга болохгүй,
+   хоосон үлдсэн өдөр "хийгээгүй" болж цувааг ч таслахгүй. */
+
+/** Тухайн өдөр тэмдэглэгээтэй юу (солихыг хориглох цорын ганц шалтгаан). */
+function hasMarks(date) {
+  return dayStatus(date).setsDone > 0;
+}
+
+/**
+ * Нэг сонголтын мөр.
+ * @param {import('../types.js').SwapOption} option
+ */
+function renderSwapOption(option) {
+  const { date, day, blocked } = option;
+  const title = day ? day.title : '—';
+
+  let when = formatDate(date);
+  if (option.isToday) when = `${when} · өнөөдөр`;
+  else if (option.isPast) when = `${when} · өнгөрсөн`;
+  if (blocked) when = `${when} · тэмдэглэгээтэй`;
+
+  return h('li', {}, [
+    h('button', {
+      type: 'button',
+      class: `swapopt${day && day.isRest ? ' is-rest' : ''}`,
+      disabled: blocked,
+      dataset: blocked ? {} : { action: 'swap-pick', date },
+      'aria-label': `${formatDateLong(date)} — ${title}`
+    }, [
+      h('span', { class: 'swapopt__wd label', text: WEEKDAY_SHORT[weekdayIndex(date)] }),
+      h('span', { class: 'swapopt__body' }, [
+        h('span', { class: 'swapopt__title', text: title }),
+        h('span', { class: 'swapopt__meta num', text: when })
+      ])
+    ])
+  ]);
+}
+
+/**
+ * Өдөр солих хэсэг. Тэмдэглэгээтэй өдрийг солихгүй — хийчихсэн сетүүд шинэ
+ * төлөвлөгөөнд таарахгүй болж, чимээгүй устах эрсдэлтэй.
+ * @param {string} date
+ * @param {Day} day
+ * @param {{swapOpen: boolean}} ctx
+ * @returns {HTMLElement|null}
+ */
+function renderSwap(date, day, ctx) {
+  const partner = swapPartner(date);
+  const marked = hasMarks(date);
+
+  // Солигдсоныг мэдэгдэх зурвас — хаанаас ирснийг нь тодорхой хэлнэ.
+  const banner = partner
+    ? h('div', { class: 'swapped' }, [
+      h('span', { class: 'swapped__icon', icon: ICONS.swap, 'aria-hidden': 'true' }),
+      h('span', {
+        class: 'swapped__text',
+        text: `${WEEKDAY_NAMES[weekdayIndex(partner)]} гарагийн бэлтгэл энд шилжсэн`
+      }),
+      marked
+        ? null
+        : h('button', {
+          type: 'button',
+          class: 'swapped__undo',
+          dataset: { action: 'swap-undo' },
+          text: 'Буцаах'
+        })
+    ])
+    : null;
+
+  // Ирээдүйн өдрийг солих нь бүрэн утгатай (маргаашийнхаа төлөвлөгөөг
+  // өнөөдөр зөөх), гэхдээ тэмдэглэгээтэй өдрийг хөндөхгүй: хийчихсэн сетүүд
+  // шинэ төлөвлөгөөнд таарахгүй болж чимээгүй устана.
+  //
+  // Товч зүгээр алга болвол "яагаад байхгүй байна?" гэсэн эргэлзээ үлдэнэ —
+  // тиймээс шалтгааныг нь хэлнэ.
+  if (marked) {
+    // Аппын бусад тайлбар мөртэй ижил хэлбэрээр (`note`) гарна — задгай
+    // текст нь дэлгэцийн хэмнэлээс унаж, хаана ч харьяалагдахгүй харагддаг.
+    return h('section', { class: 'swap' }, [
+      banner,
+      h('div', {
+        class: 'note',
+        text: 'Тэмдэглэгээтэй өдрийг зөөхгүй. Зөөх бол эхлээд тэмдэглэгээгээ ав.'
+      })
+    ]);
+  }
+
+  const label = day.isRest
+    ? 'Энэ өдөр бэлтгэл хийх'
+    : 'Энэ бэлтгэлийг өөр өдөр рүү зөөх';
+
+  const toggle = h('button', {
+    type: 'button',
+    class: `disclosure${ctx.swapOpen ? ' is-open' : ''}`,
+    'aria-expanded': ctx.swapOpen ? 'true' : 'false',
+    'aria-controls': 'swap-list',
+    dataset: { action: 'swap-open' }
+  }, [
+    h('span', { class: 'disclosure__icon', icon: ICONS.swap, 'aria-hidden': 'true' }),
+    h('span', { class: 'disclosure__text', text: label }),
+    h('span', { class: 'disclosure__chevron', icon: ICONS.chevron, 'aria-hidden': 'true' })
+  ]);
+
+  const options = ctx.swapOpen ? swapOptions(date, hasMarks) : [];
+
+  return h('section', { class: 'swap' }, [
+    banner,
+    toggle,
+    ctx.swapOpen
+      ? h('div', { class: 'disclosure__panel', id: 'swap-list' }, [
+        h('p', {
+          class: 'hint',
+          text: 'Сонгосон өдөртэйгээ бэлтгэлээ солино. Хоёр өдөр байраа солих тул '
+            + 'нэг ч бэлтгэл алдагдахгүй.'
+        }),
+        h('ul', { class: 'list-tight' }, options.map(renderSwapOption))
+      ])
+      : null
+  ]);
+}
+
 /* ---------------- Амралтын өдөр ---------------- */
 
 /**
@@ -143,13 +282,22 @@ function renderHead(date, day, extra) {
  * @param {string} date
  * @param {Day} day
  * @param {boolean} isToday
+ * @param {{swapOpen: boolean}} ctx
  */
-function renderRest(root, date, day, isToday) {
+function renderRest(root, date, day, isToday, ctx) {
   const next = nextTrainingDay(date);
 
   append(root, [
     renderHead(date, day, null),
+    // Амралтын өдөр бол "нөхөж хийх" хамгийн түгээмэл өдөр — солих хэсэг
+    // яг энд хэрэгтэй. Ирээдүйн өдөр ч мөн адил: "маргааш ядрах нь тодорхой"
+    // гэдэг яг тэр үед мэдэгддэг.
+    renderSwap(date, day, ctx),
+    // Урьд нь амралтын өдөр нь задгай текст байсан тул дэлгэц хагас хоосон,
+    // "энд юу ч алга" гэсэн мэдрэмж үлдээдэг байв. Одоо аппын бусад хэсэгтэй
+    // ижил КАРТ: сарны тэмдэг, том гарчиг, доор нь жижиг зөвлөмж.
     h('section', { class: 'rest' }, [
+      h('div', { class: 'rest__icon', icon: ICONS.moon, 'aria-hidden': 'true' }),
       h('div', {
         class: 'rest__title',
         text: isToday ? 'Өнөөдөр ачаалал алга' : 'Ачаалалгүй өдөр'
@@ -289,17 +437,20 @@ function renderExerciseRow(exercise, marks, ctx) {
 
 /**
  * @param {HTMLElement} root
- * @param {{date: string, today: string, openCards: Set<string>,
+ * @param {{date: string, today: string, openCards: Set<string>, swapOpen: boolean,
  *          flash: {exercise: string, kind: string, index: number}|null}} ctx
  */
 export function renderDay(root, ctx) {
   clear(root);
 
   const { date, today } = ctx;
+  // Гарч ирэх хөдөлгөөн нэг л удаа — тэмдэглэх бүрд давтагдахгүй.
+  const animate = fresh;
+  fresh = false;
   const isToday = date === today;
   const isFuture = date > today;
   const editable = !isFuture;
-  const day = getDayForDate(date);
+  const day = dayForDate(date);
 
   if (!isToday) root.appendChild(renderDayBar(date, today));
 
@@ -313,7 +464,7 @@ export function renderDay(root, ctx) {
 
   if (day.isRest) {
     lastPct = 0;
-    renderRest(root, date, day, isToday);
+    renderRest(root, date, day, isToday, { swapOpen: ctx.swapOpen });
     return;
   }
 
@@ -328,6 +479,8 @@ export function renderDay(root, ctx) {
     day,
     renderProgress(done, total, setCounts.done, setCounts.total)
   ));
+
+  append(root, [renderSwap(date, day, { swapOpen: ctx.swapOpen })]);
 
   if (isFuture) {
     root.appendChild(h('div', {
@@ -357,7 +510,7 @@ export function renderDay(root, ctx) {
 
   root.appendChild(h('section', { class: 'section' }, [
     h('h2', { class: 'section__title label', text: 'Дасгалууд' }),
-    h('ul', { class: 'list' }, day.exercises.map((exercise) =>
+    h('ul', { class: `list${animate ? ' is-fresh' : ''}` }, day.exercises.map((exercise) =>
       renderExerciseRow(exercise, sets[exercise.id] || [], {
         openCards: ctx.openCards,
         flash: ctx.flash,

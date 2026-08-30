@@ -5,14 +5,20 @@
 
 import { isDateString, todayString } from './data.js';
 import { clear, el, h } from './dom.js';
-import { getDayForDate } from './program.js';
+import { dayForDate, swapDays, undoSwap } from './schedule.js';
 import { clearAll, getStorageError, saveDay } from './storage.js';
 import { countDone, isExerciseDone, readSets } from './stats.js';
 import * as timer from './timer.js';
 
-import { renderDay, resetProgress } from './views/day.js';
+import { markFresh as markDayFresh, renderDay, resetProgress } from './views/day.js';
 import { renderWeek } from './views/week.js';
-import { armClear, renderHistory } from './views/history.js';
+import {
+  armClear,
+  markFresh as markHistoryFresh,
+  openDetails,
+  renderHistory,
+  toggleDetails
+} from './views/history.js';
 
 /** @typedef {import('./types.js').Day} Day */
 /** @typedef {import('./types.js').SetMarks} SetMarks */
@@ -41,6 +47,9 @@ const openCards = new Set();
 /** Дөнгөж дарсан элемент — зөвхөн тэр дээр хөдөлгөөн тоглоно. */
 /** @type {{exercise: string, kind: string, index: number}|null} */
 let flash = null;
+
+/** Өдөр солих жагсаалт нээлттэй байгаа эсэх (өдөр/таб солиход хаагдана). */
+let swapOpen = false;
 
 /** Одоо харж байгаа огноо. */
 function currentDate() {
@@ -101,6 +110,14 @@ function handleDayClick(event) {
   if (action === 'back-today') return showDay(null);
   if (action === 'step') return showDay(stepDate || null);
 
+  // --- Өдөр солилцоо ---
+  if (action === 'swap-open') {
+    swapOpen = !swapOpen;
+    return render();
+  }
+  if (action === 'swap-pick') return applySwap(stepDate || null);
+  if (action === 'swap-undo') return applySwap(null);
+
   if (action === 'timer-stop') {
     timer.stop();
     return render();
@@ -108,7 +125,7 @@ function handleDayClick(event) {
 
   const date = currentDate();
   const today = todayString();
-  const day = getDayForDate(date);
+  const day = dayForDate(date);
   if (!day || day.isRest) return;
 
   if (action === 'open') {
@@ -148,6 +165,25 @@ function handleDayClick(event) {
   commit(date, day, sets);
   render();
   flash = null; // дараагийн render дээр дахин тоглохгүй
+}
+
+/**
+ * Өдөр солих / солилцоог буцаах.
+ *
+ * Төлөвлөгөө нь бүхэлдээ солигдож байгаа тул нээлттэй байсан дасгалын
+ * мөрүүд ба ажиллаж байгаа тоолуур утгагүй болно — хоёуланг нь тэглэнэ.
+ * @param {string|null} target null бол солилцоог буцаана
+ */
+function applySwap(target) {
+  const date = currentDate();
+  const changed = target ? swapDays(date, target) : undoSwap(date);
+
+  swapOpen = false;
+  if (changed) {
+    openCards.clear();
+    timer.stop();
+  }
+  render();
 }
 
 /**
@@ -193,6 +229,11 @@ function handleHistoryClick(event) {
 
   if (action === 'day') return showDay(date || null);
 
+  if (action === 'details') {
+    toggleDetails();
+    return render();
+  }
+
   if (action === 'clear-arm') armClear(true);
   else if (action === 'clear-cancel') armClear(false);
   else if (action === 'clear-confirm') {
@@ -210,6 +251,7 @@ const RENDERERS = {
     date: currentDate(),
     today: todayString(),
     openCards,
+    swapOpen,
     flash
   }),
   week: renderWeek,
@@ -321,8 +363,15 @@ function applyTab(name) {
     indicator.style.transform = `translateX(${TAB_ORDER.indexOf(name) * 100}%)`;
   }
 
-  armClear(false);   // таб солиход устгах баталгаажуулалт тайлагдана
+  armClear(false);     // таб солиход устгах баталгаажуулалт тайлагдана
+  openDetails(false);  // түүх нь үргэлж чеклистээрээ эхэлнэ
+  swapOpen = false;    // хагас нээлттэй жагсаалт өөр дэлгэц рүү дагаж очихгүй
   resetProgress();
+
+  // Дэлгэц СОЛИГДОЖ байна — агуулга нь нэг удаа гарч ирж болно.
+  // (Тэмдэглэх бүрд болдог энгийн дахин зурагдалт дээр биш.)
+  markDayFresh();
+  markHistoryFresh();
   render();
 
   // Таб солиход дээрээс нь эхлэх нь зөв — энэ нь render()-ийн скролл
@@ -357,6 +406,7 @@ export function showDay(date) {
 
   if (next !== viewDate) {
     openCards.clear();
+    swapOpen = false;
     timer.stop(); // өөр өдөр рүү шилжихэд амралтын тоолуур утгагүй болно
   }
 
@@ -382,7 +432,7 @@ export function refreshDate() {
  * @returns {string[]}
  */
 export function visibleExerciseIds() {
-  const day = getDayForDate(currentDate());
+  const day = dayForDate(currentDate());
   return day ? day.exercises.map((exercise) => exercise.id) : [];
 }
 

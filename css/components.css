@@ -22,6 +22,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   color: var(--fg-2);
+  box-shadow: var(--edge);
   transition: background-color var(--t-tap) var(--ease),
               transform var(--t-tap) var(--ease);
 }
@@ -43,6 +44,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   color: var(--fg);
+  box-shadow: var(--edge);
   font-size: var(--t-14);
   font-weight: 600;
   transition: background-color var(--t-tap) var(--ease);
@@ -64,6 +66,7 @@
   font-size: var(--t-12);
   line-height: 1.4;
   color: var(--fg-2);
+  box-shadow: var(--edge);
 }
 
 /* ---------- Progress: шугаман, 4px, бүтэн өргөн ---------- */
@@ -101,6 +104,8 @@
 .progress__fill {
   height: 100%;
   width: 0;
+  /* Урсаж яваа үзүүр нь зөөлөн — тасарсан мэт биш, үргэлжилж байгаа мэт. */
+  border-radius: 0 2px 2px 0;
   background-color: var(--accent);
   transition: width var(--t-bar) var(--ease);
 }
@@ -115,6 +120,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r2);
   overflow: hidden;
+  box-shadow: var(--edge);
 }
 
 /* Зүүн тал: сетийн тэмдэглэгээ (нэг дараад бүх сетийг тэмдэглэнэ) */
@@ -256,7 +262,7 @@
 }
 
 .row-ex.is-done .row-ex__body {
-  opacity: 0.45;
+  opacity: 0.52;
 }
 
 .row-ex.is-done .row-ex__name {
@@ -407,6 +413,180 @@
   color: var(--accent);
 }
 
+/* ---------- Задардаг хэсэг (disclosure) ----------
+   "Өдөр солих" ба түүхийн "Дэлгэрэнгүй" хоёр нь ижил зан төлөвтэй: хоёрдогч
+   үйлдэл, хэрэгтэй үед нь задарна. Тиймээс НЭГ хэлбэр — тасархай зааг,
+   дэвсгэргүй. Дэлгэцийн гол хэмнэлийг эвдэхгүй. */
+
+.swap {
+  margin-bottom: var(--s6);
+}
+
+/* Тайлбар нь хэсгийн ГАНЦ агуулга болох үед доод зай нь давхарлана. */
+.swap .note:last-child {
+  margin-bottom: 0;
+}
+
+.disclosure {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--touch);
+  padding: 0 var(--s4);
+  background-color: transparent;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--r1);
+  color: var(--fg-2);
+  font-size: var(--t-14);
+  font-weight: 600;
+  text-align: left;
+  transition: background-color var(--t-tap) var(--ease),
+              color var(--t-tap) var(--ease);
+}
+
+.disclosure:active {
+  background-color: var(--bg-2);
+  color: var(--fg);
+}
+
+.disclosure__icon {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--fg-3);
+}
+
+.disclosure__text {
+  flex: 1 1 auto;
+}
+
+.disclosure__chevron {
+  flex: 0 0 auto;
+  display: flex;
+  color: var(--fg-3);
+  transition: transform var(--t-open) var(--ease);
+}
+
+.disclosure.is-open {
+  border-style: solid;
+  color: var(--fg);
+}
+
+.disclosure.is-open .disclosure__chevron {
+  transform: rotate(180deg);
+}
+
+.disclosure__panel {
+  margin-top: var(--s3);
+  animation: block-in var(--t-open) var(--ease);
+}
+
+.disclosure__panel .hint {
+  margin: 0 0 var(--s3);
+}
+
+.swapopt {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  width: 100%;
+  min-height: var(--touch);
+  padding: var(--s2) var(--s3);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  color: var(--fg);
+  text-align: left;
+  box-shadow: var(--edge);
+  transition: background-color var(--t-tap) var(--ease);
+}
+
+.swapopt:active {
+  background-color: var(--bg-3);
+}
+
+.swapopt[disabled] {
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* Амралтын өдөр бол цаана нь байх хэмнэл — жагсаалтад ялгарч харагдана. */
+.swapopt.is-rest .swapopt__title {
+  color: var(--fg-2);
+}
+
+.swapopt__wd {
+  flex: 0 0 auto;
+  min-width: 24px;
+  color: var(--fg-3);
+}
+
+.swapopt__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.swapopt__title {
+  font-size: var(--t-14);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swapopt__meta {
+  font-size: var(--t-12);
+  color: var(--fg-3);
+}
+
+/* Солигдсоныг мэдэгдэх зурвас — алдаа биш тул улаан биш, акцент зааг. */
+.swapped {
+  display: flex;
+  align-items: center;
+  gap: var(--s3);
+  margin-bottom: var(--s3);
+  padding: var(--s3) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--accent-dim);
+  border-radius: var(--r1);
+  box-shadow: var(--edge);
+}
+
+.swapped__icon {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--fg-3);
+}
+
+.swapped__text {
+  flex: 1 1 auto;
+  font-size: var(--t-12);
+  color: var(--fg-2);
+}
+
+.swapped__undo {
+  flex: 0 0 auto;
+  min-height: var(--touch);
+  padding: 0 var(--s2);
+  font-size: var(--t-12);
+  font-weight: 600;
+  color: var(--fg-3);
+}
+
+.swapped__undo:active {
+  color: var(--fg);
+}
+
+/* Долоо хоног / түүхийн мөрөн дээрх солилцооны тэмдэг */
+.row-day__swap {
+  display: flex;
+  flex: 0 0 auto;
+  color: var(--fg-3);
+}
+
 /* ---------- Долоо хоногийн сетийн хэмжүүр ---------- */
 
 .meter {
@@ -433,6 +613,7 @@
 
 .meter__fill {
   height: 100%;
+  border-radius: 0 2px 2px 0;
   background-color: var(--fg-2);
   transition: width var(--t-bar) var(--ease);
 }
@@ -446,6 +627,7 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--fg);
   border-radius: var(--r1);
+  box-shadow: var(--edge);
 }
 
 @keyframes block-in {
@@ -466,22 +648,37 @@
 
 /* ---------- Амралтын өдөр ---------- */
 
+/* Амралтын өдөр нь хагас хоосон дэлгэц байх ёсгүй — энэ бол хөтөлбөрийн
+   нэг хэсэг. Аппын бусад блоктой ижил карт: сарны тэмдэг, том гарчиг,
+   доор нь жижиг зөвлөмж. */
 .rest {
-  padding: var(--s8) 0;
-  border-top: 1px solid var(--line);
+  padding: var(--s6) var(--s4) var(--s4);
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r2);
+  box-shadow: var(--edge);
+}
+
+.rest__icon {
+  display: flex;
+  margin-bottom: var(--s4);
+  color: var(--fg-3);
 }
 
 .rest__title {
   font-size: var(--t-20);
   font-weight: 600;
+  line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
+/* Зөвлөмж бол хоёрдогч — гарчигаас нэг шат доош. */
 .rest__text {
-  margin-top: var(--s3);
-  font-size: var(--t-14);
-  color: var(--fg-2);
-  max-width: 30ch;
+  margin-top: var(--s2);
+  font-size: var(--t-12);
+  line-height: 1.5;
+  color: var(--fg-3);
+  max-width: 34ch;
 }
 
 .rest__next {
@@ -513,6 +710,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   text-align: left;
+  box-shadow: var(--edge);
   transition: background-color var(--t-tap) var(--ease),
               transform var(--t-tap) var(--ease);
 }
@@ -525,15 +723,18 @@
 .row-day.is-today {
   border-color: var(--line-strong);
   background-color: var(--bg-3);
+  /* Зүүн ирмэгийн 2px зурвас — 7 мөрийн дундаас өнөөдрийг нэг харцаар
+     олох боломж. Шинэ өнгө биш, байгаа акцентын бүдэг хувилбар. */
+  box-shadow: var(--edge), inset 2px 0 0 var(--accent-dim);
 }
 
 .row-day.is-idle {
-  opacity: 0.55;
+  opacity: 0.72;
 }
 
 /* Амралт бол алдаа ч биш, амжилт ч биш — хэмнэлийн цаад давхарга. */
 .row-day.is-quiet {
-  opacity: 0.45;
+  opacity: 0.62;
 }
 
 .row-day__wd {
@@ -609,15 +810,204 @@
 .row-day__state {
   flex: 0 0 auto;
   font-size: var(--t-12);
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  /* 600 жин дээр "ХИЙГЭЭГҮЙ" гэсэн үг долоо хоногийн жагсаалт дээр дараалан
+     давтагдаж, дасгалын НЭРтэй өрсөлдөж эхэлдэг байв. Төлөв нь хоёрдогч
+     мэдээлэл — жинг нь нэг шат буулгаснаар мөр нь эхлээд "юу" гэдгээ,
+     дараа нь "яасан" гэдгээ хэлдэг боллоо. */
+  font-weight: 500;
+  letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--fg-3);
   white-space: nowrap;
 }
 
+/* Биелсэн өдөр бол ганц үнэхээр сайн мэдээ — тэр л тодорч харагдана. */
 .row-day__state.is-done {
+  font-weight: 600;
   color: var(--fg);
+}
+
+/* ---------- Чеклист: 30 хоногийн хуанлийн тор ----------
+   30 мөр гүйлгэхийн оронд нэг дэлгэцэнд багтсан тор. Нүд бүр нь өдрийн
+   дэлгэц рүү нээгддэг товч — жагсаалтын мөртэй яг ижил үйлдэл.
+   Хэлбэр нь аппд аль хэдийн байгаа сетийн товчтой (`.set`) нэг гэр бүл:
+   дугуйрсан дөрвөлжин, дүүрэхдээ акцент. */
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+}
+
+.grid__head,
+.grid__row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--s1);
+}
+
+.grid__head {
+  margin-bottom: var(--s1);
+}
+
+.grid__wd {
+  text-align: center;
+  color: var(--fg-3);
+}
+
+.cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  /* Дөрвөлжин хэвээр: өргөн нь баганаас, өндөр нь түүнтэй тэнцүү. */
+  aspect-ratio: 1;
+  min-height: 40px;
+  padding: 0;
+  background-color: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r1);
+  box-shadow: var(--edge);
+  color: var(--fg-2);
+  transition: background-color var(--t-tap) var(--ease),
+              border-color var(--t-tap) var(--ease),
+              transform var(--t-tap) var(--ease);
+}
+
+.cell:active {
+  transform: scale(0.94);
+}
+
+/* Дутуу өдрийн дүүргэлт — нүдний ёроолоос хийсэн хувь хүртэл.
+   Огнооны ард үлдэнэ (z-index биш, зүгээр л эхэлж зурагдана). */
+.cell__fill {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: 0 0 7px 7px;
+  background-color: var(--accent-dim);
+  opacity: 0.5;
+}
+
+.cell__day {
+  font-size: var(--t-12);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.cell__mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 15px;
+  font-size: var(--t-12);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Биелсэн: акцентаар дүүрч, чек тавигдана. */
+.cell.is-done {
+  background-color: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* Дутуу: бүтнээр дүүрэхгүй — хийсэн хэсэг нь л дүүрнэ. */
+.cell.is-partial {
+  border-color: var(--fg-2);
+  color: var(--fg);
+  overflow: hidden;
+}
+
+.cell.is-partial .cell__day {
+  position: relative;
+}
+
+/* Хийгээгүй: хоосон нүд. Бүдэг ч гэсэн огноо нь уншигдана. */
+.cell.is-none {
+  color: var(--fg-3);
+}
+
+/* Удахгүй ирэх өдөр — буруутгах эрт. */
+.cell.is-upcoming {
+  border-style: dashed;
+  color: var(--fg-3);
+}
+
+/* Тайлбар доторх амралтын зураас — торон дээрх "зааггүй" төлөвийг
+   тайлбарт үзүүлэх ганц арга. */
+.cell__dash {
+  width: 10px;
+  height: 1.5px;
+  background-color: var(--fg-3);
+}
+
+/* Амралт: хэмнэлийн цаад давхарга — зааггүй, зөвхөн бүдэг тоо. */
+.cell.is-rest {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--fg-3);
+  opacity: 0.6;
+}
+
+/* Өнөөдөр: тороос нэг харцаар олдоно. */
+.cell.is-today {
+  border-color: var(--accent);
+}
+
+.cell.is-today.is-done {
+  box-shadow: var(--edge), 0 0 0 2px var(--bg-1), 0 0 0 3px var(--accent-dim);
+}
+
+/* Торны гадна унасан өдөр — байрыг нь л эзэлнэ. */
+.cell--empty {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* Тайлбар: тэмдэг бүр юу гэсэн үг вэ. */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s2) var(--s4);
+  margin-top: var(--s4);
+}
+
+.legend__item {
+  display: flex;
+  align-items: center;
+  gap: var(--s2);
+}
+
+.legend__text {
+  font-size: var(--t-12);
+  color: var(--fg-3);
+}
+
+/* Тайлбар доторх нүд нь зөвхөн жишээ — дарагдахгүй, жижиг. */
+.cell--chip {
+  width: 18px;
+  min-height: 18px;
+  border-radius: 5px;
+}
+
+.cell--chip .cell__mark {
+  height: auto;
+}
+
+.cell--chip.is-partial .cell__fill {
+  height: 45%;
+  border-radius: 0 0 4px 4px;
+}
+
+.cell--chip svg {
+  width: 11px;
+  height: 11px;
 }
 
 /* ---------- Цуваа ----------
@@ -635,6 +1025,7 @@
   border: 1px solid var(--line);
   border-left: 2px solid var(--fg-3);
   border-radius: var(--r1);
+  box-shadow: var(--edge);
 }
 
 .streak__main {
@@ -667,6 +1058,7 @@
   border: 1px solid var(--line);
   border-radius: var(--r1);
   overflow: hidden;
+  box-shadow: var(--edge);
 }
 
 .stat {
@@ -676,9 +1068,10 @@
 }
 
 .stat__value {
-  font-size: var(--t-20);
+  font-size: var(--t-28);
   font-weight: 700;
   line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .stat__label {
@@ -699,6 +1092,7 @@
   color: var(--danger);
   font-size: var(--t-14);
   font-weight: 600;
+  box-shadow: var(--edge);
 }
 
 .danger:active {
@@ -741,3 +1135,189 @@
   font-size: var(--t-14);
   color: var(--fg-2);
 }
+
+/* ---------- Хулганатай төхөөрөмж ----------
+   Апп нь утсанд зориулагдсан тул бүх хариу нь :active дээр баригдсан байв.
+   Хөтөч дээр (эсвэл таблет + хулгана) дарахаас өмнө "энэ дарагдана" гэдэг нь
+   мэдэгдэхгүй байсан. `hover: hover` шалгуур нь мэдрэгчтэй дэлгэц дээр энэ
+   хэсгийг огт үйлчлүүлэхгүй — утсан дээр "наалдсан hover" гарахгүй. */
+
+@media (hover: hover) and (pointer: fine) {
+  .row-ex__body:hover,
+  .mark:hover,
+  .row-day:hover,
+  .daybar__today:hover,
+  .disclosure:hover,
+  .swapopt:hover:not([disabled]),
+  .daybar__step:hover:not([disabled]),
+  .set:hover:not([disabled]):not(.is-on),
+  .cell:hover:not(.is-done):not(.cell--empty),
+  .danger:hover:not(.is-armed) {
+    background-color: var(--bg-3);
+  }
+
+  /* Тэмдэглэгдсэн сет аль хэдийн акцентаар дүүрсэн — дэвсгэрийг нь
+     бүдгэрүүлэхийн оронд бага зэрэг тодруулна. */
+  .set.is-on:hover {
+    background-color: var(--fg);
+  }
+
+  .timer__stop:hover,
+  .swapped__undo:hover,
+  .danger-cancel:hover {
+    color: var(--fg);
+  }
+}
+
+/* ---------- Микро-хөдөлгөөн ----------
+   Дүрэм: анзаарагдах ёсгүй, зөвхөн МЭДРЭГДЭХ ёстой. Тиймээс бүгд богино,
+   зөвхөн transform / opacity (хөтчийн хувьд хамгийн хямд хоёр шинж чанар),
+   өнгө ч шинэ хэлбэр ч нэмэхгүй.
+   `prefers-reduced-motion: reduce` дор эдгээр бүгд base.css дотор
+   зогсоогдоно — энэ хэсэг тусдаа үл хамаарах зүйл үүсгэхгүй. */
+
+/* 1. Дарах физик: хүрэхэд шуурхай, тавихад зөөлөн.
+      Ижил хугацаа хоёр тийшээ явбал товч наалдсан мэт болдог. */
+.set,
+.cell,
+.mark,
+.row-ex__body,
+.row-day,
+.swapopt,
+.daybar__step,
+.daybar__today,
+.disclosure,
+.danger,
+.tab__icon {
+  transition-duration: var(--t-tap);
+}
+
+.set:active,
+.cell:active,
+.mark:active,
+.row-ex__body:active,
+.row-day:active,
+.swapopt:active,
+.daybar__step:active,
+.daybar__today:active,
+.disclosure:active,
+.danger:active {
+  transition-duration: var(--t-press);
+}
+
+/* 2. Дөнгөж тэмдэглэсэн сет: цагирган долгион нэг л удаа тарна.
+      Аль сетийг дарсныг нүд өөрөө хөөж очно. */
+.set,
+.timer {
+  position: relative;
+}
+
+.set.is-flash.is-on::after,
+.timer.is-done::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border: 1px solid var(--accent-dim);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: ring-out 460ms var(--ease) forwards;
+}
+
+@keyframes ring-out {
+  from { opacity: 0.55; transform: scale(1); }
+  to   { opacity: 0;    transform: scale(1.08); }
+}
+
+/* Тоолуур том тул долгион нь бага зэрэг л тэлнэ. */
+.timer.is-done::after {
+  animation-name: ring-out-wide;
+  animation-duration: 560ms;
+}
+
+@keyframes ring-out-wide {
+  from { opacity: 0.5; transform: scale(1); }
+  to   { opacity: 0;   transform: scale(1.012); }
+}
+
+/* 3. Идэвхтэй таб: icon нь үл мэдэг дээшилнэ. Заагчийн гулсалттай хамт
+      "энэ таб сонгогдлоо" гэдгийг хоёр давхар хэлнэ. */
+.tab.is-active .tab__icon {
+  transform: translateY(-1px);
+}
+
+.tab:active .tab__icon {
+  transform: scale(0.9);
+}
+
+/* 4. Чеклист нээгдэхэд нүднүүд ЗӨВХӨН ЭХНИЙ удаад долгион шиг гарч ирнэ.
+      Тэмдэглэгээ солигдоод дэлгэц дахин зурагдах бүрд давтагдвал
+      анивчсан мэт болно — тиймээс ui.js зөвхөн таб солиход `is-fresh`
+      тавьдаг. Мөрийн дугаар (--row) ба баганы дугаар (--col) нийлж
+      хойшлолт болно: тор нь зүүн дээднээс баруун доош урсана. */
+.grid__row:nth-child(2) { --row: 0; }
+.grid__row:nth-child(3) { --row: 1; }
+.grid__row:nth-child(4) { --row: 2; }
+.grid__row:nth-child(5) { --row: 3; }
+.grid__row:nth-child(6) { --row: 4; }
+.grid__row:nth-child(7) { --row: 5; }
+
+.grid.is-fresh .cell:nth-child(1) { --col: 0; }
+.grid.is-fresh .cell:nth-child(2) { --col: 1; }
+.grid.is-fresh .cell:nth-child(3) { --col: 2; }
+.grid.is-fresh .cell:nth-child(4) { --col: 3; }
+.grid.is-fresh .cell:nth-child(5) { --col: 4; }
+.grid.is-fresh .cell:nth-child(6) { --col: 5; }
+.grid.is-fresh .cell:nth-child(7) { --col: 6; }
+
+.grid.is-fresh .cell {
+  animation: cell-in 240ms var(--ease) backwards;
+  animation-delay: calc(var(--row, 0) * 26ms + var(--col, 0) * 8ms);
+}
+
+@keyframes cell-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.94); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* 5. Түүхийн дээд хэсэг: цуваа, дараа нь дөрвөн тоо дараалж босно. */
+.streak.is-fresh {
+  animation: block-in var(--t-open) var(--ease) backwards;
+}
+
+.stats.is-fresh .stat {
+  animation: cell-in 260ms var(--ease) backwards;
+}
+
+.stats.is-fresh .stat:nth-child(1) { animation-delay: 40ms; }
+.stats.is-fresh .stat:nth-child(2) { animation-delay: 70ms; }
+.stats.is-fresh .stat:nth-child(3) { animation-delay: 100ms; }
+.stats.is-fresh .stat:nth-child(4) { animation-delay: 130ms; }
+
+/* 6. Задардаг жагсаалт (өдөр солих, дэлгэрэнгүй): мөрүүд дараалж унана.
+      Хойшлолт 8 мөрөөр таслагдана — 30 мөр дараалж унавал хүлээлт болно. */
+.disclosure__panel .list-tight > li {
+  animation: cell-in 220ms var(--ease) backwards;
+  animation-delay: 90ms;
+}
+
+.disclosure__panel .list-tight > li:nth-child(1) { animation-delay: 20ms; }
+.disclosure__panel .list-tight > li:nth-child(2) { animation-delay: 30ms; }
+.disclosure__panel .list-tight > li:nth-child(3) { animation-delay: 40ms; }
+.disclosure__panel .list-tight > li:nth-child(4) { animation-delay: 50ms; }
+.disclosure__panel .list-tight > li:nth-child(5) { animation-delay: 60ms; }
+.disclosure__panel .list-tight > li:nth-child(6) { animation-delay: 70ms; }
+.disclosure__panel .list-tight > li:nth-child(7) { animation-delay: 80ms; }
+
+/* 7. Өдрийн дасгалын жагсаалт: дэлгэц нээгдэхэд мөрүүд дараалж унана.
+      Тэмдэглэх бүрд биш — зөвхөн өдөр/таб солиход (`is-fresh`). */
+.list.is-fresh > li {
+  animation: cell-in 240ms var(--ease) backwards;
+  animation-delay: 110ms;
+}
+
+.list.is-fresh > li:nth-child(1) { animation-delay: 20ms; }
+.list.is-fresh > li:nth-child(2) { animation-delay: 40ms; }
+.list.is-fresh > li:nth-child(3) { animation-delay: 55ms; }
+.list.is-fresh > li:nth-child(4) { animation-delay: 70ms; }
+.list.is-fresh > li:nth-child(5) { animation-delay: 85ms; }
+.list.is-fresh > li:nth-child(6) { animation-delay: 100ms; }

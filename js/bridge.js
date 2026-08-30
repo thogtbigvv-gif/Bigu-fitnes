@@ -15,7 +15,8 @@
 // түүнийг хэдэн XP болгохыг summer-project-ийн XP_RULES шийднэ.
 
 import { NAMESPACE, HISTORY_DAYS, isTimestamp, todayString, parseDateString } from './data.js';
-import { getDayById, getDayForDate } from './program.js';
+import { getDayById } from './program.js';
+import { dayForDate } from './schedule.js';
 import { getDayResult, getRecentDays } from './storage.js';
 import { readJson, writeJson } from './safe-storage.js';
 
@@ -87,7 +88,7 @@ function seedFingerprint() {
  * @returns {Day|null}
  */
 function dayOf(date, dayId) {
-  return (dayId ? getDayById(dayId) : null) || getDayForDate(date);
+  return (dayId ? getDayById(dayId) : null) || dayForDate(date);
 }
 
 /**

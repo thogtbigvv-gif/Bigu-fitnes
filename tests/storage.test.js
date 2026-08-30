@@ -33,8 +33,9 @@ function marks(filled) {
 test('хоосон хадгалалт нь хоосон төлөв өгнө', () => {
   reset();
   const state = storage.loadState();
-  assert.equal(state.version, 1);
+  assert.equal(state.version, 2);
   assert.deepEqual(state.sessions, {});
+  assert.deepEqual(state.swaps, {});
   assert.equal(storage.firstSessionDate(), null);
   assert.equal(storage.getDayResult('2026-08-26'), null);
 });

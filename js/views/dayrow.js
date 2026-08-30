@@ -5,6 +5,7 @@
 
 import { formatDate } from '../data.js';
 import { ICONS, h } from '../dom.js';
+import { isSwapped } from '../schedule.js';
 import { STATUS_DOT, STATUS_LABEL, describeStatus } from '../stats.js';
 
 /** @typedef {import('../types.js').DayRow} DayRow */
@@ -27,11 +28,16 @@ export function dayRow(row, today, weekday) {
   const describe = describeStatus(status);
   const meta = describe ? `${formatDate(date)} · ${describe}` : formatDate(date);
 
+  // Солигдсон өдөр: гарагийн ердийн төлөвлөгөө нь биш гэдгийг чимээгүй
+  // мэдэгдэнэ — эс бөгөөс "яагаад Лхагвад хөл байна?" гэсэн эргэлзээ үүснэ.
+  const swapped = isSwapped(date);
+
   // Дэлгэрэнгүйг нь дуут уншигчид ч хүргэнэ — урьд нь зөвхөн огноо ба төлөв
   // уншигддаг байсан тул "3/7 дасгал" гэсэн мэдээлэл сонсогдохгүй байв.
-  const spoken = describe
+  let spoken = describe
     ? `${formatDate(date)} — ${label}, ${describe}`
     : `${formatDate(date)} — ${label}`;
+  if (swapped) spoken += ', өдөр солигдсон';
 
   return h('li', {}, [
     h('button', {
@@ -47,6 +53,14 @@ export function dayRow(row, today, weekday) {
         h('span', { class: 'row-day__title', text: status.day ? status.day.title : '—' }),
         h('span', { class: 'row-day__meta num', text: meta })
       ]),
+      swapped
+        ? h('span', {
+          class: 'row-day__swap',
+          icon: ICONS.swap,
+          title: 'Өдөр солигдсон',
+          'aria-hidden': 'true'
+        })
+        : null,
       h('span', {
         class: `row-day__state${key === 'done' ? ' is-done' : ''}`,
         text: label
