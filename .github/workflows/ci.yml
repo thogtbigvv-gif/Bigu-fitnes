@@ -27,5 +27,8 @@ jobs:
       # JSDoc-оор бичигдсэн төрлүүд бол зүгээр тайлбар биш — checkJs дор
       # бодит шалгалт болж ажиллана. TypeScript зөвхөн ЭНД хэрэгтэй,
       # түгээлтэнд ордоггүй.
+      #
+      # Тушаал нь package.json дотор нэг л газар бичигдсэн: CI ба README
+      # хоёр зөрөх боломжгүй.
       - name: Төрлийн шалгалт
-        run: npx --yes typescript@5.7 tsc --noEmit -p jsconfig.json
+        run: npm run typecheck
